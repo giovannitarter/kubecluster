@@ -1,41 +1,7 @@
-terraform {
-  required_providers {
-    
-    proxmox = {
-      source = "bpg/proxmox"
-      version = "0.83.0"
-    }
-    
-    ct = {
-      source  = "poseidon/ct"
-      version = "0.13.0"
-    }
-
-  }
-}
-
-provider "proxmox" {
-    
-    endpoint = "https://pve1.lan:8006/"
-    api_token = var.pve_api_token
-    insecure = true
-
-    ssh {
-      username = "root"
-      agent = false
-      private_key = file("./secrets/id_terraform")
-    }
-}
-
-
-provider "ct" {
-}
-
-
 
 
 resource "proxmox_virtual_environment_download_file" "flatcar_image" {
-  
+
   for_each = var.nodes
 
   content_type = "import"
@@ -48,9 +14,9 @@ resource "proxmox_virtual_environment_download_file" "flatcar_image" {
 
 
 data "ct_config" "cplane-node" {
-  
+
   for_each = var.nodes
-  
+
   content      = file("./config_cplane/cplane.yml")
   strict       = true
   pretty_print = true
@@ -70,13 +36,13 @@ data "ct_config" "cplane-node" {
 
 
 resource "proxmox_virtual_environment_file" "cplane_config" {
-  
+
   for_each = var.nodes
   node_name = each.value.pvenode
-  
+
   content_type = "snippets"
   datastore_id = "local"
-  
+
   source_raw {
     data = data.ct_config.cplane-node[each.key].rendered
     file_name = "flatcar_config_${each.key}.yaml"
@@ -85,7 +51,7 @@ resource "proxmox_virtual_environment_file" "cplane_config" {
 
 
 resource "proxmox_virtual_environment_vm" "flatcar_vm" {
-  
+
   for_each = var.nodes
   name      = each.key
   node_name = each.value.pvenode
@@ -101,7 +67,7 @@ resource "proxmox_virtual_environment_vm" "flatcar_vm" {
     discard      = "on"
     size         = 20
   }
-  
+
   agent {
     enabled = true
   }
@@ -137,4 +103,3 @@ output "vms_ipv4_address" {
     for k, val in proxmox_virtual_environment_vm.flatcar_vm: k => val.ipv4_addresses[1][0]
   }
 }
-
