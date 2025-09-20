@@ -1,0 +1,24 @@
+[global]
+keyboard = "it"
+country = "it"
+fqdn = "pveauto.testinstall0"
+mailto = "mail@no.invalid"
+timezone = "Europe/Rome"
+root-password = ""
+root-ssh-keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID31VmcZbdV491BWUv1QDl0f3QW0Tcs6j9sp/0hY4Qsm pupillo@G3ARCH"
+]
+
+[network]
+source = "from-dhcp"
+
+[disk-setup]
+#filesystem = "zfs"
+#zfs.raid = "raid1"
+disk-list = ["sda"]
+filesystem = "ext4"
+
+
+[post-installation-webhook]
+url = "http://cntsrv1.lan:8090/postinst"
+#cert-fingerprint = "AA:E8:CB:95:B1:..."
