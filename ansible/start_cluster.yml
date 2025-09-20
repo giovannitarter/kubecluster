@@ -1,0 +1,12 @@
+---
+
+- name: boot cluster
+  hosts: all
+  gather_facts: false
+
+  tasks:
+
+    - name: Send a magic Wake-on-LAN packet
+      community.general.wakeonlan:
+        mac: "{{ mac_address }}"
+      delegate_to: localhost

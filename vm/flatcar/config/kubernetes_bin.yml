@@ -1,0 +1,68 @@
+---
+version: 1.0.0
+variant: flatcar
+storage:
+  files:
+    - path: /opt/bin/kubectl
+      mode: 0755
+      contents:
+        source: https://dl.k8s.io/v1.33.2/bin/linux/amd64/kubectl
+    - path: /opt/bin/kubeadm
+      mode: 0755
+      contents:
+        source: https://dl.k8s.io/v1.33.2/bin/linux/amd64/kubeadm
+    - path: /opt/bin/kubelet
+      mode: 0755
+      contents:
+        source: https://dl.k8s.io/v1.33.2/bin/linux/amd64/kubelet
+    - path: /etc/systemd/system/kubelet.service
+      contents:
+        source: https://raw.githubusercontent.com/kubernetes/release/refs/tags/v0.18.0/cmd/krel/templates/latest/kubelet/kubelet.service
+    - path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+      contents:
+        source: https://raw.githubusercontent.com/kubernetes/release/refs/tags/v0.18.0/cmd/krel/templates/latest/kubeadm/10-kubeadm.conf
+    - path: /etc/kubeadm.yml
+      contents:
+        inline: |
+          apiVersion: kubeadm.k8s.io/v1beta3
+          kind: InitConfiguration
+          nodeRegistration:
+            kubeletExtraArgs:
+              volume-plugin-dir: "/opt/libexec/kubernetes/kubelet-plugins/volume/exec/"
+          ---
+          apiVersion: kubeadm.k8s.io/v1beta3
+          kind: ClusterConfiguration
+          controllerManager:
+            extraArgs:
+              flex-volume-plugin-dir: "/opt/libexec/kubernetes/kubelet-plugins/volume/exec/"
+    - path: /etc/hostname
+      contents:
+        inline: "flatcar-node1"
+systemd:
+  units:
+    - name: kubelet.service
+      enabled: true
+      dropins:
+        - name: 20-kubelet.conf
+          contents: |
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/kubelet $KUBELET_KUBECONFIG_ARGS $KUBELET_CONFIG_ARGS $KUBELET_KUBEADM_ARGS $KUBELET_EXTRA_ARGS
+    - name: kubeadm.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Kubeadm service
+        Requires=containerd.service
+        After=containerd.service
+        After=network-online.target
+        ConditionPathExists=!/etc/kubernetes/kubelet.conf
+        [Service]
+        Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/bin"
+        ExecStartPre=/opt/bin/kubeadm config images pull
+        ExecStartPre=/opt/bin/kubeadm init --config /etc/kubeadm.yml
+        ExecStartPre=/usr/bin/mkdir /home/core/.kube
+        ExecStartPre=/usr/bin/cp /etc/kubernetes/admin.conf /home/core/.kube/config
+        ExecStart=/usr/bin/chown -R core:core /home/core/.kube
+        [Install]
+        WantedBy=multi-user.target

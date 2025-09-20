@@ -1,0 +1,50 @@
+---
+variant: flatcar
+version: 1.1.0
+
+storage:
+  files:
+    - path: /opt/extensions/cilium/cilium-v0.18.2-x86-64.raw
+      contents:
+        source: https://extensions.flatcar.org/extensions/cilium-v0.18.2-x86-64.raw
+    - path: /etc/sysupdate.cilium.d/cilium.conf
+      contents:
+        source: https://extensions.flatcar.org/extensions/cilium.conf
+    - path: /etc/sysupdate.d/noop.conf
+      contents:
+        source: https://extensions.flatcar.org/extensions/noop.conf
+  links:
+    - target: /opt/extensions/cilium/cilium-v0.18.2-x86-64.raw
+      path: /etc/extensions/cilium.raw
+      hard: false
+
+systemd:
+  units:
+    - name: cilium.service
+      enabled: true
+      contents: |
+          [Unit]
+          Description=Install cilium to running k8s cluster
+          Documentation=https://docs.cilium.io/en/stable
+          Wants=network-online.target
+          After=kubeadm.service
+
+          [Service]
+          Type=oneshot
+          Environment=KUBECONFIG='/home/core/.kube/config'
+          ExecStart=/usr/local/bin/cilium install --set kubeProxyReplacement=true --namespace=kube-system
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: systemd-sysupdate.timer
+      enabled: true
+    - name: systemd-sysupdate.service
+      dropins:
+        - name: cilium.conf
+          contents: |
+            [Service]
+            ExecStartPre=/usr/bin/sh -c "readlink --canonicalize /etc/extensions/cilium.raw > /tmp/cilium"
+            ExecStartPre=/usr/lib/systemd/systemd-sysupdate -C cilium update
+            ExecStartPost=/usr/bin/sh -c "readlink --canonicalize /etc/extensions/cilium.raw > /tmp/cilium-new"
+            ExecStartPost=/usr/bin/sh -c "if ! cmp --silent /tmp/cilium /tmp/cilium-new; then touch /run/reboot-required; fi"

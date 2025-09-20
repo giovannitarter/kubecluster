@@ -1,0 +1,52 @@
+---
+version: 1.1.0
+variant: flatcar
+storage:
+  links:
+    - target: /opt/extensions/kubernetes/kubernetes-v1.33.2-x86-64.raw
+      path: /etc/extensions/kubernetes.raw
+      hard: false
+  files:
+    - path: /etc/sysupdate.kubernetes.d/kubernetes-v1.33.conf
+      contents:
+        source: https://extensions.flatcar.org/extensions/kubernetes/kubernetes-v1.33.conf
+    - path: /etc/sysupdate.d/noop.conf
+      contents:
+        source: https://extensions.flatcar.org/extensions/noop.conf
+    - path: /opt/extensions/kubernetes/kubernetes-v1.33.2-x86-64.raw
+      contents:
+        source: https://extensions.flatcar.org/extensions/kubernetes-v1.33.2-x86-64.raw
+
+systemd:
+  units:
+    - name: systemd-sysupdate.timer
+      enabled: true
+    - name: systemd-sysupdate.service
+      dropins:
+        - name: kubernetes.conf
+          contents: |
+            [Service]
+            ExecStartPre=/usr/bin/sh -c "readlink --canonicalize /etc/extensions/kubernetes.raw > /tmp/kubernetes"
+            ExecStartPre=/usr/lib/systemd/systemd-sysupdate -C kubernetes update
+            ExecStartPost=/usr/bin/sh -c "readlink --canonicalize /etc/extensions/kubernetes.raw > /tmp/kubernetes-new"
+            ExecStartPost=/usr/bin/sh -c "if ! cmp --silent /tmp/kubernetes /tmp/kubernetes-new; then touch /run/reboot-required; fi"
+    - name: locksmithd.service
+      # NOTE: To coordinate the node reboot in this context, we recommend to use Kured.
+      mask: true
+    - name: kubeadm.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Kubeadm service
+        Requires=containerd.service
+        After=containerd.service
+        After=network-online.target
+        ConditionPathExists=!/etc/kubernetes/kubelet.conf
+        [Service]
+        ExecStartPre=/usr/bin/kubeadm init
+        ExecStartPre=/usr/bin/mkdir /home/core/.kube
+        ExecStartPre=/usr/bin/cp /etc/kubernetes/admin.conf /home/core/.kube/config
+        ExecStart=/usr/bin/chown -R core:core /home/core/.kube
+        [Install]
+        WantedBy=multi-user.target
+        

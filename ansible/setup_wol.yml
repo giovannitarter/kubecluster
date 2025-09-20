@@ -1,0 +1,22 @@
+
+- name: setup wol
+  hosts: all
+  become: True
+  tasks:
+    
+    - name: Set macs
+      ansible.builtin.debug:
+        msg: "{{ hostvars[inventory_hostname].ansible_default_ipv4.macaddress }}"
+
+    - name: Set wol file
+      
+      vars:
+        iface_mac: "{{ hostvars[inventory_hostname].ansible_default_ipv4.macaddress }}"
+
+      ansible.builtin.template:
+        dest: /etc/systemd/network/50-wired.link
+        src: 50-wired.link.j2
+
+    - name: Reboot
+      ansible.builtin.reboot:
+

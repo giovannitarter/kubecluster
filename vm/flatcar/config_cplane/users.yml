@@ -1,0 +1,20 @@
+---
+
+variant: flatcar
+version: 1.0.0
+passwd:
+  users:
+    - name: pupillo
+      password_hash: ""
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDvbRhcyUAotOfDG8HB98GrZgsBk0E4G66dcI4HKN/D1 pupillo@cntsrv1
+      home_dir: /home/pupillo
+      no_create_home: false
+      groups:
+        - docker
+        - sudo
+      shell: /bin/bash
+
+    - name: core
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDvbRhcyUAotOfDG8HB98GrZgsBk0E4G66dcI4HKN/D1 pupillo@cntsrv1

@@ -1,0 +1,11 @@
+---
+- name: shutdown
+  hosts: all
+  become: true
+  tasks:
+
+    - name: Shutdown
+      ansible.builtin.shell:
+        cmd: /bin/sleep 2; /sbin/shutdown -h now
+      async: 1000
+      poll: 0
