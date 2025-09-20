@@ -13,24 +13,31 @@ resource "proxmox_virtual_environment_download_file" "flatcar_image" {
 }
 
 
+# 00000_flatcar_specs.yml
+# 0000_hostname.yml
+# 0000_users.yml
+# 00_base-k8s-token.yaml
+# 00_base-k8s.yml
+
+
 data "ct_config" "cplane-node" {
 
   for_each = var.nodes
 
-  content      = file("./config_cplane/cplane.yml")
+  content      = file("./butane/00000_flatcar_specs.yml")
   strict       = true
   pretty_print = true
 
   snippets = [
 
-    templatefile("./config_cplane/hostname.yml", {
+    templatefile("./butane/0000_hostname.yml", {
       hostname = each.key
     }
     ),
 
-    file("./config_cplane/users.yml"),
-    file("./config_cplane/kubernetes.yml"),
-    file("./config_cplane/cilium.yml"),
+    file("./butane/0000_users.yml"),
+    file("./butane/00_base-k8s-token.yml"),
+    file("./butane/00_base-k8s.yml"),
   ]
 }
 

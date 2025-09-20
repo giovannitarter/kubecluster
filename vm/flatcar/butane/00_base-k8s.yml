@@ -1,0 +1,158 @@
+---
+variant: flatcar
+version: 1.1.0
+storage:
+  links:
+
+    - path: /etc/extensions/docker-flatcar.raw
+      target: /dev/null
+      overwrite: true
+
+    - path: /etc/extensions/containerd-flatcar.raw
+      target: /dev/null
+      overwrite: true
+
+    - target: /opt/extensions/crio/crio-v1.32.2-x86-64.raw
+      path: /etc/extensions/crio.raw
+      hard: false
+
+    - target: /opt/extensions/kubernetes/kubernetes-v1.33.2-x86-64.raw
+      path: /etc/extensions/kubernetes.raw
+      hard: false
+
+    - target: /opt/extensions/cilium/cilium-v0.18.2-x86-64.raw
+      path: /etc/extensions/cilium.raw
+      hard: false
+
+  files:
+
+    # kubernetes
+    - path: /etc/sysupdate.kubernetes.d/kubernetes-v1.33.conf
+      contents:
+        source: https://extensions.flatcar.org/extensions/kubernetes/kubernetes-v1.33.conf
+
+    - path: /opt/extensions/kubernetes/kubernetes-v1.33.2-x86-64.raw
+      contents:
+        source: https://extensions.flatcar.org/extensions/kubernetes-v1.33.2-x86-64.raw
+
+    # cri-o runtime
+    - path: /opt/extensions/crio/crio-v1.32.2-x86-64.raw
+      mode: 0644
+      contents:
+        source: https://extensions.flatcar.org/extensions/crio-v1.32.2-x86-64.raw
+
+    - path: /etc/sysupdate.crio.d/crio.conf
+      contents:
+        source: https://extensions.flatcar.org/extensions/crio.conf
+
+    # clilium
+    - path: /opt/extensions/cilium/cilium-v0.18.2-x86-64.raw
+      contents:
+        source: https://extensions.flatcar.org/extensions/cilium-v0.18.2-x86-64.raw
+
+    - path: /etc/sysupdate.cilium.d/cilium.conf
+      contents:
+        source: https://extensions.flatcar.org/extensions/cilium.conf
+
+    # sysupdate conf
+    - path: /etc/sysupdate.d/noop.conf
+      contents:
+        source: https://extensions.flatcar.org/extensions/noop.conf
+
+    # enabled sysext
+    - path: /etc/flatcar/enabled-sysext.conf
+      contents:
+        inline: |
+          zfs
+          podman
+      mode: 0644
+
+
+systemd:
+  units:
+
+    - name: systemd-sysupdate.timer
+      enabled: true
+
+    - name: locksmithd.service
+      # NOTE: To coordinate the node reboot in this context, we recommend to use Kured.
+      mask: true
+
+    - name: systemd-sysupdate.service
+      dropins:
+        - name: kubernetes.conf
+          contents: |
+            [Service]
+            ExecStartPre=/usr/bin/sh -c \
+            "readlink --canonicalize /etc/extensions/kubernetes.raw > /tmp/kubernetes"
+            ExecStartPre=/usr/lib/systemd/systemd-sysupdate -C kubernetes update
+            ExecStartPost=/usr/bin/sh -c \
+            "readlink --canonicalize /etc/extensions/kubernetes.raw > /tmp/kubernetes-new"
+            ExecStartPost=/usr/bin/sh -c \
+            "if ! cmp --silent /tmp/kubernetes /tmp/kubernetes-new; then touch /run/reboot-required; fi"
+        - name: crio.conf
+          contents: |
+            [Service]
+
+            ExecStartPre=/usr/bin/sh -c\
+              "readlink --canonicalize /etc/extensions/crio.raw > /tmp/crio"
+
+            ExecStartPre=/usr/lib/systemd/systemd-sysupdate -C crio update
+
+            ExecStartPost=/usr/bin/sh -c\
+              "readlink --canonicalize /etc/extensions/crio.raw > /tmp/crio-new"
+
+            ExecStartPost=/usr/bin/sh -c\
+              "if ! cmp --silent /tmp/crio /tmp/crio-new; \
+              then touch /run/reboot-required; \
+              fi"
+
+    - name: cilium.service
+      enabled: true
+      contents: |
+          [Unit]
+          Description=Install cilium to running k8s cluster
+          Documentation=https://docs.cilium.io/en/stable
+          Wants=network-online.target
+          After=kubeadm.service
+
+          [Service]
+          Type=oneshot
+          Environment=KUBECONFIG='/home/core/.kube/config'
+          ExecStart=/usr/local/bin/cilium install --set kubeProxyReplacement=true --namespace=kube-system
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: zfs-setup.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Load zfs kernel modules
+        After=local-fs-pre.target
+        Wants=local-fs-pre.target
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/modprobe zfs
+        RemainAfterExit=true
+
+        [Install]
+        WantedBy=multi-user.target
+
+    - name: kubeadm.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Kubeadm service
+        Requires=crio.service
+        After=crio.service
+        After=network-online.target
+        ConditionPathExists=!/etc/kubernetes/kubelet.conf
+        [Service]
+        ExecStartPre=/usr/bin/kubeadm init
+        ExecStartPre=/usr/bin/mkdir /home/core/.kube
+        ExecStartPre=/usr/bin/cp /etc/kubernetes/admin.conf /home/core/.kube/config
+        ExecStart=/usr/bin/chown -R core:core /home/core/.kube
+        [Install]
+        WantedBy=multi-user.target
