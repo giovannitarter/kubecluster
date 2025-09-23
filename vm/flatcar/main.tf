@@ -18,6 +18,10 @@ resource "proxmox_virtual_environment_download_file" "flatcar_image" {
 # 0000_users.yml
 # 00_base-k8s-token.yaml
 # 00_base-k8s.yml
+# 10_base-ha.yml
+# 20_keepalived.yml
+# 21_haproxy.yml
+# 30_start-k8s.yml
 
 
 data "ct_config" "cplane-node" {
@@ -30,14 +34,49 @@ data "ct_config" "cplane-node" {
 
   snippets = [
 
-    templatefile("./butane/0000_hostname.yml", {
-      hostname = each.key
-    }
+    templatefile(
+      "./butane/0000_hostname.yml", {
+        k8s_vip = var.k8s_vip,
+        hostname = each.key,
+      }
     ),
 
     file("./butane/0000_users.yml"),
     file("./butane/00_base-k8s-token.yml"),
     file("./butane/00_base-k8s.yml"),
+
+    templatefile(
+      "./butane/10_base-ha.yml", {
+        k8s_vip = var.k8s_vip,
+      }
+    ),
+    templatefile(
+      "./butane/20_keepalived.yml", {
+        k8s_vip = "${var.k8s_vip}/${var.k8s_vip_cird}",
+        vrrp_state = "MASTER",
+        priority = each.value.priority
+      }
+    ),
+    templatefile(
+      "./butane/21_haproxy.yml", {
+        k8s_vip = var.k8s_vip,
+        cpnodes = [ for k, val in var.nodes:
+          {
+            name = k,
+            ip = val.addr,
+            port = 6443,
+          }
+        ]
+      }
+    ),
+    templatefile(
+      "./butane/30_start-k8s.yml", {
+        k8s_vip = var.k8s_vip,
+      }
+    ),
+
+
+
   ]
 }
 
@@ -95,7 +134,7 @@ resource "proxmox_virtual_environment_vm" "flatcar_vm" {
   initialization {
     ip_config {
       ipv4 {
-          address = each.value.addr
+          address = "${each.value.addr}/${each.value.cird}"
           gateway = "192.168.2.1"
       }
     }

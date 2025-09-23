@@ -1,0 +1,59 @@
+---
+variant: flatcar
+version: 1.1.0
+
+#ignition:
+#  config:
+#    merge:
+#      - local: ign/20_base-ha-cp.ign
+
+storage:
+  files:
+systemd:
+  units:
+
+    - name: kubeadm.service
+      enabled: false
+      contents: |
+        [Unit]
+        StartLimitInterval=200
+        StartLimitBurst=5
+        Description=Kubeadm service
+        Requires=haproxy.service
+        After=haproxy.service
+        ConditionPathExists=!/etc/kubernetes/kubelet.conf
+        [Service]
+        Type=oneshot
+        EnvironmentFile=/etc/kubernetes/kubeadm-env.conf
+        EnvironmentFile=/etc/kubernetes/certs.conf
+        ExecStartPre=/usr/bin/kubeadm init \
+          --token $${K8S_TOKEN} \
+          --cri-socket=unix:///var/run/crio/crio.sock \
+          --skip-phases=addon/kube-proxy \
+          --control-plane-endpoint $${K8S_APISERVER_URL}:6444 \
+          --upload-certs
+        ExecStartPre=/usr/bin/mkdir /home/core/.kube
+        ExecStartPre=/usr/bin/cp \
+          /etc/kubernetes/admin.conf \
+          /home/core/.kube/config
+        ExecStartPre=/usr/bin/chown -R core:core /home/core/.kube
+        ExecStart=exit 0
+        # We skip kube-proxy because we install cilium
+        [Install]
+        WantedBy=multi-user.target
+
+    - name: cilium-install-cluster.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Install Cilium as Kubernetes CNI
+        Requires=kubeadm.service
+        After=kubeadm.service
+        [Service]
+        #EnvironmentFile=/etc/kubernetes/kubeadm-env.conf
+        Environment=KUBECONFIG='/home/core/.kube/config'
+        ExecStart=/usr/local/bin/cilium install \
+          --set kubeProxyReplacement=true \
+          --namespace=kube-system
+        [Install]
+        WantedBy=multi-user.target

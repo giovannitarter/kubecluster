@@ -107,22 +107,22 @@ systemd:
               then touch /run/reboot-required; \
               fi"
 
-    - name: cilium.service
-      enabled: true
-      contents: |
-          [Unit]
-          Description=Install cilium to running k8s cluster
-          Documentation=https://docs.cilium.io/en/stable
-          Wants=network-online.target
-          After=kubeadm.service
-
-          [Service]
-          Type=oneshot
-          Environment=KUBECONFIG='/home/core/.kube/config'
-          ExecStart=/usr/local/bin/cilium install --set kubeProxyReplacement=true --namespace=kube-system
-
-          [Install]
-          WantedBy=multi-user.target
+#    - name: cilium.service
+#      enabled: true
+#      contents: |
+#          [Unit]
+#          Description=Install cilium to running k8s cluster
+#          Documentation=https://docs.cilium.io/en/stable
+#          Wants=network-online.target
+#          After=kubeadm.service
+#
+#          [Service]
+#          Type=oneshot
+#          Environment=KUBECONFIG='/home/core/.kube/config'
+#          ExecStart=/usr/local/bin/cilium install --set kubeProxyReplacement=true --namespace=kube-system
+#
+#          [Install]
+#          WantedBy=multi-user.target
 
     - name: zfs-setup.service
       enabled: true
@@ -140,19 +140,19 @@ systemd:
         [Install]
         WantedBy=multi-user.target
 
-    - name: kubeadm.service
-      enabled: true
-      contents: |
-        [Unit]
-        Description=Kubeadm service
-        Requires=crio.service
-        After=crio.service
-        After=network-online.target
-        ConditionPathExists=!/etc/kubernetes/kubelet.conf
-        [Service]
-        ExecStartPre=/usr/bin/kubeadm init
-        ExecStartPre=/usr/bin/mkdir /home/core/.kube
-        ExecStartPre=/usr/bin/cp /etc/kubernetes/admin.conf /home/core/.kube/config
-        ExecStart=/usr/bin/chown -R core:core /home/core/.kube
-        [Install]
-        WantedBy=multi-user.target
+#    - name: kubeadm.service
+#      enabled: true
+#      contents: |
+#        [Unit]
+#        Description=Kubeadm service
+#        Requires=crio.service
+#        After=crio.service
+#        After=network-online.target
+#        ConditionPathExists=!/etc/kubernetes/kubelet.conf
+#        [Service]
+#        ExecStartPre=/usr/bin/kubeadm init
+#        ExecStartPre=/usr/bin/mkdir /home/core/.kube
+#        ExecStartPre=/usr/bin/cp /etc/kubernetes/admin.conf /home/core/.kube/config
+#        ExecStart=/usr/bin/chown -R core:core /home/core/.kube
+#        [Install]
+#        WantedBy=multi-user.target

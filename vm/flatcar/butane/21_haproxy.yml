@@ -1,0 +1,79 @@
+---
+variant: flatcar
+version: 1.1.0
+
+storage:
+  files:
+
+    - path: /etc/containers/systemd/haproxy.container
+      contents:
+        inline: |
+          [Unit]
+          Description=HAProxy Container
+          Requires=keepalived.service
+          After=keepalived.service
+
+          [Container]
+          Image=docker.io/library/haproxy:alpine
+          AutoUpdate=registry
+          Network=host
+          Volume=/etc/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+
+          [Service]
+          Restart=always
+          RestartSec=30
+
+          [Install]
+          WantedBy=multi-user.target default.target
+
+    - path: /etc/haproxy/haproxy.cfg
+      contents:
+        inline: |
+          # /etc/haproxy/haproxy.cfg
+          #---------------------------------------------------------------------
+          # Global settings
+          #---------------------------------------------------------------------
+          global
+              log stdout format raw local0
+              daemon
+
+          #---------------------------------------------------------------------
+          # common defaults that all the 'listen' and 'backend' sections will
+          # use if not designated in their block
+          #---------------------------------------------------------------------
+          defaults
+              mode                    http
+              log                     global
+              option                  httplog
+              option                  dontlognull
+              option http-server-close
+              option forwardfor       except 127.0.0.0/8
+              option                  redispatch
+              retries                 1
+              timeout http-request    10s
+              timeout queue           20s
+              timeout connect         5s
+              timeout client          35s
+              timeout server          35s
+              timeout http-keep-alive 10s
+              timeout check           10s
+
+          #---------------------------------------------------------------------
+          # apiserver frontend which proxys to the control plane nodes
+          #---------------------------------------------------------------------
+          frontend apiserver
+              bind ${k8s_vip}:6444
+              mode tcp
+              option tcplog
+              default_backend apiserverbackend
+
+          #---------------------------------------------------------------------
+          # round robin balancing for apiserver
+          #---------------------------------------------------------------------
+          backend apiserverbackend
+              mode tcp
+              balance     roundrobin
+
+          %{ for node in cpnodes ~}
+              server ${node.name} ${node.ip}:${node.port} check verify none
+          %{ endfor ~}

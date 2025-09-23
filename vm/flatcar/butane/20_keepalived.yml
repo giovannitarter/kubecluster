@@ -1,0 +1,95 @@
+---
+variant: flatcar
+version: 1.1.0
+
+storage:
+  files:
+
+    - path: /etc/keepalived/check_apiserver.sh
+      mode: 0755
+      contents:
+        inline: |
+          #!/bin/bash
+          curl  --silent \
+                --max-time 2 \
+                --insecure https://localhost:6443/healthz \
+                -o /dev/null || exit 1
+
+    - path: /etc/containers/systemd/keepalived.container
+      contents:
+        inline: |
+          [Unit]
+          Description=Keepalived Container
+          Requires=crio.service
+          After=crio.service
+
+          [Container]
+          Image=docker.io/osixia/keepalived:latest
+          AutoUpdate=registry
+          AddCapability=NET_ADMIN
+          AddCapability=NET_BROADCAST
+          AddCapability=NET_RAW
+          PodmanArgs=--privileged
+          Exec=--copy-service
+          Volume=/etc/keepalived/keepalived.conf:/container/service/keepalived/assets/keepalived.conf:ro
+          Volume=/etc/keepalived/check_apiserver.sh:/etc/keepalived/check_apiserver.sh:ro
+          Network=host
+
+          [Service]
+          Restart=always
+          RestartSec=30
+
+          [Install]
+          WantedBy=multi-user.target default.target
+
+    - path: /etc/keepalived/keepalived.conf
+      mode: 0644
+      contents:
+        inline: |
+          ! /etc/keepalived/keepalived.conf
+          ! Configuration File for keepalived
+          global_defs {
+              router_id LVS_DEVEL
+          }
+          vrrp_script check_apiserver {
+            script "/etc/keepalived/check_apiserver.sh"
+            interval 3
+            weight -2
+            fall 10
+            rise 2
+          }
+          vrrp_instance VI_1 {
+              state ${vrrp_state}
+              interface eth0
+              virtual_router_id 51
+              priority ${priority}
+              authentication {
+                  auth_type PASS
+                  auth_pass kubevip
+              }
+              virtual_ipaddress {
+                  ${k8s_vip}
+              }
+              track_script {
+                  check_apiserver
+              }
+          }
+
+
+systemd:
+  units:
+    - name: ip_vs-setup.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Load ip_vs kernel modules
+        After=local-fs-pre.target
+        Wants=local-fs-pre.target
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/modprobe ip_vs
+        RemainAfterExit=true
+
+        [Install]
+        WantedBy=multi-user.target
