@@ -14,3 +14,12 @@ storage:
         - inline: |
             ${k8s_vip} kubernetes
             127.0.0.1 ${hostname}
+
+    #- path: /etc/systemd/network/10-static.network
+    #  contents:
+    #    inline: |
+    #      [Match]
+    #      Name=*
+    #      [Network]
+    #      LinkLocalAddressing=no
+    #      IPv6AcceptRA=no

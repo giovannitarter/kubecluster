@@ -19,6 +19,7 @@ tofu destroy -var-file="./secrets/secrets.tfvars"
 ```
 # create infra
 ```
+tofu init
 tofu plan -out plan -var-file="./secrets/secrets.tfvars"
 tofu apply plan
 ```

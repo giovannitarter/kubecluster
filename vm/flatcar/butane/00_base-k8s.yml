@@ -12,49 +12,48 @@ storage:
       target: /dev/null
       overwrite: true
 
-    - target: /opt/extensions/crio/crio-v1.32.2-x86-64.raw
+    - target: /opt/extensions/crio/crio-v1.34.0-x86-64.raw
       path: /etc/extensions/crio.raw
       hard: false
 
-    - target: /opt/extensions/kubernetes/kubernetes-v1.33.2-x86-64.raw
+    - target: /opt/extensions/kubernetes/kubernetes-v1.34.1-x86-64.raw
       path: /etc/extensions/kubernetes.raw
       hard: false
 
-    - target: /opt/extensions/cilium/cilium-v0.18.2-x86-64.raw
+    - target: /opt/extensions/cilium/cilium-v0.18.7-x86-64.raw
       path: /etc/extensions/cilium.raw
       hard: false
 
   files:
 
     # kubernetes
-    - path: /etc/sysupdate.kubernetes.d/kubernetes-v1.33.conf
+    - path: /etc/sysupdate.kubernetes.d/kubernetes-v1.34.conf
       contents:
-        source: https://extensions.flatcar.org/extensions/kubernetes/kubernetes-v1.33.conf
+        source: https://extensions.flatcar.org/extensions/kubernetes/kubernetes-v1.34.conf
 
-    - path: /opt/extensions/kubernetes/kubernetes-v1.33.2-x86-64.raw
+    - path: /opt/extensions/kubernetes/kubernetes-v1.34.1-x86-64.raw
       contents:
-        source: https://extensions.flatcar.org/extensions/kubernetes-v1.33.2-x86-64.raw
+        source: https://extensions.flatcar.org/extensions/kubernetes-v1.34.1-x86-64.raw
 
     # cri-o runtime
-    - path: /opt/extensions/crio/crio-v1.32.2-x86-64.raw
-      mode: 0644
+    - path: /opt/extensions/crio/crio-v1.34.0-x86-64.raw
       contents:
-        source: https://extensions.flatcar.org/extensions/crio-v1.32.2-x86-64.raw
+        source: https://extensions.flatcar.org/extensions/crio-v1.34.0-x86-64.raw
 
     - path: /etc/sysupdate.crio.d/crio.conf
       contents:
-        source: https://extensions.flatcar.org/extensions/crio.conf
+        source: https://extensions.flatcar.org/extensions/crio/crio.conf
 
     # clilium
-    - path: /opt/extensions/cilium/cilium-v0.18.2-x86-64.raw
+    - path: /opt/extensions/cilium/cilium-v0.18.7-x86-64.raw
       contents:
-        source: https://extensions.flatcar.org/extensions/cilium-v0.18.2-x86-64.raw
+        source: https://extensions.flatcar.org/extensions/cilium-v0.18.7-x86-64.raw
 
     - path: /etc/sysupdate.cilium.d/cilium.conf
       contents:
         source: https://extensions.flatcar.org/extensions/cilium.conf
 
-    # sysupdate conf
+    ## sysupdate conf
     - path: /etc/sysupdate.d/noop.conf
       contents:
         source: https://extensions.flatcar.org/extensions/noop.conf
@@ -107,23 +106,6 @@ systemd:
               then touch /run/reboot-required; \
               fi"
 
-#    - name: cilium.service
-#      enabled: true
-#      contents: |
-#          [Unit]
-#          Description=Install cilium to running k8s cluster
-#          Documentation=https://docs.cilium.io/en/stable
-#          Wants=network-online.target
-#          After=kubeadm.service
-#
-#          [Service]
-#          Type=oneshot
-#          Environment=KUBECONFIG='/home/core/.kube/config'
-#          ExecStart=/usr/local/bin/cilium install --set kubeProxyReplacement=true --namespace=kube-system
-#
-#          [Install]
-#          WantedBy=multi-user.target
-
     - name: zfs-setup.service
       enabled: true
       contents: |
@@ -139,20 +121,3 @@ systemd:
 
         [Install]
         WantedBy=multi-user.target
-
-#    - name: kubeadm.service
-#      enabled: true
-#      contents: |
-#        [Unit]
-#        Description=Kubeadm service
-#        Requires=crio.service
-#        After=crio.service
-#        After=network-online.target
-#        ConditionPathExists=!/etc/kubernetes/kubelet.conf
-#        [Service]
-#        ExecStartPre=/usr/bin/kubeadm init
-#        ExecStartPre=/usr/bin/mkdir /home/core/.kube
-#        ExecStartPre=/usr/bin/cp /etc/kubernetes/admin.conf /home/core/.kube/config
-#        ExecStart=/usr/bin/chown -R core:core /home/core/.kube
-#        [Install]
-#        WantedBy=multi-user.target

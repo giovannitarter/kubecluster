@@ -1,5 +1,23 @@
 
 
+locals {
+  hanodes = flatten([
+    for k, val in var.nodes:
+      contains(["cplane-master", "cplane"], val.type) ?
+      [
+        {
+          name = k,
+          ip = val.addr,
+          port = 6443,
+        }
+      ]
+      :
+      []
+    ]
+  )
+}
+
+
 resource "proxmox_virtual_environment_download_file" "flatcar_image" {
 
   for_each = var.nodes
@@ -32,7 +50,7 @@ data "ct_config" "cplane-node" {
   strict       = true
   pretty_print = true
 
-  snippets = [
+  snippets = flatten([
 
     templatefile(
       "./butane/0000_hostname.yml", {
@@ -41,7 +59,14 @@ data "ct_config" "cplane-node" {
       }
     ),
 
-    file("./butane/0000_users.yml"),
+    templatefile(
+      "./butane/0001_ssh_hostkeys.yml", {
+        hostname = each.key,
+      }
+    ),
+
+    file("./butane/0002_users.yml"),
+
     file("./butane/00_base-k8s-token.yml"),
     file("./butane/00_base-k8s.yml"),
 
@@ -50,41 +75,63 @@ data "ct_config" "cplane-node" {
         k8s_vip = var.k8s_vip,
       }
     ),
-    templatefile(
-      "./butane/20_keepalived.yml", {
-        k8s_vip = "${var.k8s_vip}/${var.k8s_vip_cird}",
-        vrrp_state = "MASTER",
-        priority = each.value.priority
-      }
-    ),
-    templatefile(
-      "./butane/21_haproxy.yml", {
-        k8s_vip = var.k8s_vip,
-        cpnodes = [ for k, val in var.nodes:
-          {
-            name = k,
-            ip = val.addr,
-            port = 6443,
+
+    (
+      each.value.type == "cplane-master" || each.value.type == "cplane" ?
+      [
+
+        templatefile(
+          "./butane/20_keepalived.yml", {
+            k8s_vip = "${var.k8s_vip}/${var.k8s_vip_cird}",
+            vrrp_state = "MASTER",
+            priority = each.value.priority
           }
-        ]
-      }
+        ),
+        templatefile(
+          "./butane/21_haproxy.yml", {
+            k8s_vip = var.k8s_vip,
+            cpnodes = local.hanodes
+          }
+        ),
+      ]
+      :
+      []
     ),
 
     (
-      each.value.priority == 101 ?
+      each.value.type == "cplane-master" ?
+      [
       templatefile(
-        "./butane/30_start-k8s.yml", {
-          k8s_vip = var.k8s_vip,
-          perform_init = "true",
+        "./butane/30_cplane-master.yml", {
         }
-      ) 
-      : 
+      )
+      ]
+      : []
+    ),
+
+    (
+      each.value.type == "cplane" ?
+      [
       templatefile(
         "./butane/31_cpnode-join.yml", {
         }
       )
+      ]
+      : []
     ),
-  ]
+
+    (
+      each.value.type == "worker" ?
+      [
+        templatefile(
+          "./butane/32_worker-join.yml", {
+          }
+        )
+      ]
+      : []
+    ),
+
+  ])
 }
 
 
@@ -131,6 +178,7 @@ resource "proxmox_virtual_environment_vm" "flatcar_vm" {
 
   network_device {
     bridge = "vmbr0"
+    mac_address = each.value.mac
   }
 
   memory {
@@ -139,6 +187,12 @@ resource "proxmox_virtual_environment_vm" "flatcar_vm" {
 
 
   initialization {
+
+    dns {
+      domain = ".lan"
+      servers = ["192.168.2.1"]
+    }
+
     ip_config {
       ipv4 {
           address = "${each.value.addr}/${each.value.cird}"

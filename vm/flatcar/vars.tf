@@ -28,6 +28,7 @@ variable "nodes" {
     addr = string
     cird = string
     priority = number
+    mac = string
     }))
 
   default = {
@@ -37,6 +38,7 @@ variable "nodes" {
       addr = "192.168.2.71",
       cird = "24",
       priority = 101
+      mac = "bc:24:11:02:4d:01"
     },
     cplane2 = {
       type = "cplane",
@@ -44,6 +46,7 @@ variable "nodes" {
       addr = "192.168.2.72",
       cird = "24",
       priority = 100
+      mac = "bc:24:11:02:4d:02"
     },
     cplane3 = {
       type = "cplane",
@@ -51,6 +54,31 @@ variable "nodes" {
       addr = "192.168.2.73",
       cird = "24",
       priority = 99
+      mac = "bc:24:11:02:4d:03"
     }
+    worker1 = {
+      type = "worker",
+      pvenode = "pve-7824af04dcdf",
+      addr = "192.168.2.74",
+      cird = "24",
+      priority = 91
+      mac = "bc:24:11:02:4d:04"
+    },
+    worker2 = {
+      type = "worker",
+      pvenode = "pve-382c4a0f7540",
+      addr = "192.168.2.75",
+      cird = "24",
+      priority = 90
+      mac = "bc:24:11:02:4d:05"
+    },
+    worker3 = {
+      type = "worker",
+      pvenode = "pve-7824af04dc40",
+      addr = "192.168.2.76",
+      cird = "24",
+      priority = 89
+      mac = "bc:24:11:02:4d:06"
+    },
   }
 }

@@ -20,8 +20,7 @@ systemd:
         After=crio.service
         ConditionPathExists=!/etc/kubernetes/kubelet.conf
         [Service]
-        #Restart=always
-        #RestartSec=30
+        Type=oneshot
         EnvironmentFile=/etc/kubernetes/kubeadm-env.conf
         EnvironmentFile=/etc/kubernetes/certs.conf
         ExecStartPre=/usr/bin/kubeadm config images pull

@@ -20,18 +20,18 @@ systemd:
         After=crio.service
         ConditionPathExists=!/etc/kubernetes/kubelet.conf
         [Service]
-        Restart=always
-        RestartSec=30
+        Type=oneshot
         EnvironmentFile=/etc/kubernetes/kubeadm-env.conf
         EnvironmentFile=/etc/kubernetes/certs.conf
         ExecStartPre=/usr/bin/kubeadm config images pull
         ExecStartPre=/usr/bin/sh -c \
           "while ! nc -z $${K8S_APISERVER_URL} 6444; do sleep 5; done"
-        ExecStart=/usr/bin/kubeadm join \
+        ExecStartPre=/usr/bin/kubeadm join \
           $${K8S_APISERVER_URL}:6444 \
           --token $${K8S_TOKEN} \
           --discovery-token-ca-cert-hash $${K8S_HASH} \
           --ignore-preflight-errors=FileAvailable--etc-kubernetes-pki-ca.crt \
           --cri-socket=unix:///var/run/crio/crio.sock
+        ExecStart=/usr/bin/true
         [Install]
         WantedBy=multi-user.target
