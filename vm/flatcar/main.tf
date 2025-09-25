@@ -69,14 +69,21 @@ data "ct_config" "cplane-node" {
         ]
       }
     ),
-    templatefile(
-      "./butane/30_start-k8s.yml", {
-        k8s_vip = var.k8s_vip,
-      }
+
+    (
+      each.value.priority == 101 ?
+      templatefile(
+        "./butane/30_start-k8s.yml", {
+          k8s_vip = var.k8s_vip,
+          perform_init = "true",
+        }
+      ) 
+      : 
+      templatefile(
+        "./butane/31_cpnode-join.yml", {
+        }
+      )
     ),
-
-
-
   ]
 }
 
