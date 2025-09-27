@@ -1,0 +1,75 @@
+---
+
+# this file is generated from generate-ssh-hostkeys.sh
+# currently, it has been redacted to remove the keys,
+# run generate-ssh-hostkeys.sh to re-create it
+
+variant: flatcar
+version: 1.1.0
+storage:
+  files:
+
+    - path: /etc/ssh/ssh_host_ed25519_key.pub
+      contents:
+        inline: |
+
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+
+
+    - path: /etc/ssh/ssh_host_ed25519_key
+      contents:
+        inline: |
+
+      mode: 0600
+      user:
+        id: 0
+      group:
+        id: 0
+
+
+    - path: /etc/ssh/ssh_host_ecdsa_key.pub
+      contents:
+        inline: |
+
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+
+
+    - path: /etc/ssh/ssh_host_ecdsa_key
+      contents:
+        inline: |
+
+      mode: 0600
+      user:
+        id: 0
+      group:
+        id: 0
+
+
+    - path: /etc/ssh/ssh_host_rsa_key.pub
+      contents:
+        inline: |
+
+      mode: 0644
+      user:
+        id: 0
+      group:
+        id: 0
+
+
+    - path: /etc/ssh/ssh_host_rsa_key
+      contents:
+        inline: |
+
+      mode: 0600
+      user:
+        id: 0
+      group:
+        id: 0

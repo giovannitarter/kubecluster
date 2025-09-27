@@ -1,0 +1,30 @@
+---
+# This is generated using generate-k8s-certs.sh
+variant: flatcar
+version: 1.1.0
+storage:
+  files:
+    - path: /etc/kubernetes/pki/ca.crt
+      contents:
+        inline: |
+
+
+    - path: /etc/kubernetes/pki/ca.key
+      contents:
+        inline: |
+
+
+    - path: /etc/kubernetes/pki/front-proxy-ca.key
+      contents:
+        inline: |
+
+
+    - path: /etc/kubernetes/pki/etcd/ca.key
+      contents:
+        inline: |
+
+    - path: /etc/kubernetes/certs.conf
+      contents:
+        inline: |
+            K8S_TOKEN=''
+            K8S_HASH=''

@@ -1,2 +1,15 @@
 venv/*
 vm/flatcar/butane/00_base-k8s-token.yaml
+vm/flatcar/butane/0001_ssh_hostkeys.yml
+
+ansible/inventory.yml
+vm/flatcar/.terraform.lock.hcl
+vm/flatcar/.terraform/
+vm/flatcar/certs/
+vm/flatcar/config_worker/
+vm/flatcar/plan
+vm/flatcar/secrets/id_terraform
+vm/flatcar/secrets/id_terraform.pub
+vm/flatcar/secrets/secrets.tfvars
+vm/flatcar/terraform.tfstate
+vm/flatcar/terraform.tfstate.backup

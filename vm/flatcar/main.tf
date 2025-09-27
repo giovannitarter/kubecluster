@@ -1,20 +1,25 @@
 
 
 locals {
+
   hanodes = flatten([
     for k, val in var.nodes:
       contains(["cplane-master", "cplane"], val.type) ?
-      [
-        {
-          name = k,
-          ip = val.addr,
-          port = 6443,
-        }
-      ]
+      [k]
       :
       []
     ]
   )
+
+  hanodes_conf = [
+    for k in local.hanodes:
+    {
+      name = k,
+      ip = var.nodes[k].addr,
+      port = 6443,
+    }
+  ]
+
 }
 
 
@@ -29,17 +34,6 @@ resource "proxmox_virtual_environment_download_file" "flatcar_image" {
   overwrite    = false
   file_name = "flatcar_stable.qcow2"
 }
-
-
-# 00000_flatcar_specs.yml
-# 0000_hostname.yml
-# 0000_users.yml
-# 00_base-k8s-token.yaml
-# 00_base-k8s.yml
-# 10_base-ha.yml
-# 20_keepalived.yml
-# 21_haproxy.yml
-# 30_start-k8s.yml
 
 
 data "ct_config" "cplane-node" {
@@ -77,7 +71,7 @@ data "ct_config" "cplane-node" {
     ),
 
     (
-      each.value.type == "cplane-master" || each.value.type == "cplane" ?
+      contains(local.hanodes, each.key) ?
       [
 
         templatefile(
@@ -90,7 +84,7 @@ data "ct_config" "cplane-node" {
         templatefile(
           "./butane/21_haproxy.yml", {
             k8s_vip = var.k8s_vip,
-            cpnodes = local.hanodes
+            cpnodes = local.hanodes_conf
           }
         ),
       ]
@@ -182,7 +176,7 @@ resource "proxmox_virtual_environment_vm" "flatcar_vm" {
   }
 
   memory {
-    dedicated = 4096
+    dedicated = each.value.mem != null ? each.value.mem : 4096
   }
 
 
