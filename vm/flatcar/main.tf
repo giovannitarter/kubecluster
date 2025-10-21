@@ -125,9 +125,18 @@ data "ct_config" "cplane-node" {
       : []
     ),
 
+    (
+      each.value.type == "cplane" ?
+      [
+        file("butane/60_flux2.yml"),
+        file("butane/61_github_keypair.yml"),
+        file("butane/70_helm.yml")
+      ]
+      : []
+    ),
+
   ])
 }
-
 
 resource "proxmox_virtual_environment_file" "cplane_config" {
 

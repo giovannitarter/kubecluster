@@ -1,0 +1,23 @@
+---
+variant: flatcar
+version: 1.1.0
+storage:
+  links:
+
+    - target: /opt/extensions/helm/helm.raw
+      path: /etc/extensions/helm.raw
+      hard: false
+
+  files:
+
+    - path: /opt/extensions/helm/helm.raw
+      contents:
+        source: http://cntsrv1.lan:8000/helm-3.19.0-x86-64.raw
+
+    - path: /etc/sysupdate.helm.d/helm.conf
+      contents:
+        source: http://cntsrv1.lan:8000/helm.conf
+
+
+systemd:
+  units: []

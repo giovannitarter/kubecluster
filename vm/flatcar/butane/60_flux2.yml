@@ -1,0 +1,23 @@
+---
+variant: flatcar
+version: 1.1.0
+storage:
+  links:
+
+    - target: /opt/extensions/flux2/flux2.raw
+      path: /etc/extensions/flux2.raw
+      hard: false
+
+  files:
+
+    - path: /opt/extensions/flux2/flux2.raw
+      contents:
+        source: http://cntsrv1.lan:8000/flux2-2.7.2-x86-64.raw
+
+    - path: /etc/sysupdate.flux2.d/flux2.conf
+      contents:
+        source: http://cntsrv1.lan:8000/flux2.conf
+
+
+systemd:
+  units: []
