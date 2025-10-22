@@ -135,6 +135,17 @@ data "ct_config" "cplane-node" {
       : []
     ),
 
+    (
+      each.value.type == "cplane-master" ?
+      [
+        file("butane/60_flux2.yml"),
+        file("butane/61_github_keypair.yml"),
+        file("butane/62_flux2-bootstrap.yml"),
+        file("butane/70_helm.yml")
+      ]
+      : []
+    )
+
   ])
 }
 

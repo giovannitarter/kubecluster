@@ -1,0 +1,42 @@
+---
+variant: flatcar
+version: 1.1.0
+
+storage:
+  links: []
+  files:
+    - path: /etc/local/bin/kube_ready
+      mode: 0755
+      contents:
+        inline: |
+          #!/bin/bash
+          set -e
+          kubectl get nodes --no-headers \
+          | cut -d " " -f 4 \
+          | grep -v "Ready" \
+          || true
+
+systemd:
+
+  units:
+
+    - name: flux-bootstrap.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Bootstrap flux when cluster is ready
+        Requires=kubeadm.service
+        After=kubeadm.service
+        [Service]
+        Environment=KUBECONFIG='/home/core/.kube/config'
+        Type=simple
+        ExecCondition=/etc/local/bin/kube_ready
+        ExecStart=flux bootstrap \
+          git --url=ssh://git@github.com/giovannitarter/kubecluster.git \
+          --branch=main \
+          --private-key-file=/home/core/.ssh/id_github \
+          --path=clusters/first-cluster \
+          --silent
+        Restart=on-failure
+        [Install]
+        WantedBy=multi-user.target
