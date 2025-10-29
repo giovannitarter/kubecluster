@@ -98,6 +98,10 @@ data "ct_config" "cplane-node" {
       templatefile(
         "./butane/30_cplane-master.yml", {
         }
+      ),
+      templatefile(
+        "butane/31_cplane-master-cilium.yml", {
+        }
       )
       ]
       : []
@@ -107,7 +111,7 @@ data "ct_config" "cplane-node" {
       each.value.type == "cplane" ?
       [
       templatefile(
-        "./butane/31_cpnode-join.yml", {
+        "./butane/32_cpnode-join.yml", {
         }
       )
       ]
@@ -118,7 +122,7 @@ data "ct_config" "cplane-node" {
       each.value.type == "worker" ?
       [
         templatefile(
-          "./butane/32_worker-join.yml", {
+          "./butane/33_worker-join.yml", {
           }
         )
       ]

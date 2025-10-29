@@ -21,6 +21,7 @@ systemd:
         [Service]
         EnvironmentFile=/etc/kubernetes/kubeadm-env.conf
         EnvironmentFile=/etc/kubernetes/certs.conf
+        # We skip kube-proxy because we install cilium
         ExecStartPre=/usr/bin/kubeadm init \
           --token $${K8S_TOKEN} \
           --cri-socket=unix:///var/run/crio/crio.sock \
@@ -33,22 +34,5 @@ systemd:
           /home/core/.kube/config
         ExecStartPre=/usr/bin/chown -R core:core /home/core/.kube
         ExecStart=/usr/bin/true
-        # We skip kube-proxy because we install cilium
-        [Install]
-        WantedBy=multi-user.target
-
-    - name: cilium-install-cluster.service
-      enabled: true
-      contents: |
-        [Unit]
-        Description=Install Cilium as Kubernetes CNI
-        Requires=kubeadm.service
-        After=kubeadm.service
-        [Service]
-        #EnvironmentFile=/etc/kubernetes/kubeadm-env.conf
-        Environment=KUBECONFIG='/home/core/.kube/config'
-        ExecStart=/usr/local/bin/cilium install \
-          --set kubeProxyReplacement=true \
-          --namespace=kube-system
         [Install]
         WantedBy=multi-user.target

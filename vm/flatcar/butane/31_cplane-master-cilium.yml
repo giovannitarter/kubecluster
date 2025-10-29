@@ -1,0 +1,28 @@
+---
+variant: flatcar
+version: 1.1.0
+
+storage:
+  files:
+
+systemd:
+  units:
+
+    - name: cilium-install.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Install Cilium as Kubernetes CNI
+        Requires=kubeadm.service
+        After=kubeadm.service
+        [Service]
+        EnvironmentFile=/etc/kubernetes/kubeadm-env.conf
+        Environment=KUBECONFIG='/home/core/.kube/config'
+        ExecCondition=nc -z $${K8S_APISERVER_URL} 6444
+        ExecStart=/usr/bin/bash -c '/usr/local/bin/cilium status \
+              --wait --wait-duration=1m \
+          || /usr/local/bin/cilium install \
+              --set kubeProxyReplacement=true \
+              --namespace=kube-system'
+        [Install]
+        WantedBy=multi-user.target
