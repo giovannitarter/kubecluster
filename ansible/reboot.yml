@@ -5,9 +5,8 @@
   become: true
   tasks:
 
-    - name: Shutdown
+    - name: Reboot
       ansible.builtin.command:
-        cmd: /sbin/shutdown -r now
-
-    - name: Wait to go down
-      local_action: wait_for host={{ ansible_ssh_host }} port=22 state=stopped
+        cmd: /bin/sleep 2; /sbin/shutdown -r now
+      async: 1000
+      poll: 0
