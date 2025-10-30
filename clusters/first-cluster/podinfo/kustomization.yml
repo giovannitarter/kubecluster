@@ -3,4 +3,4 @@
 namespace: default
 
 resources:
-  - podinfo.yml
+  - app.yaml
