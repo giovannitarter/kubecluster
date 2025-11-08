@@ -60,6 +60,7 @@ data "ct_config" "cplane-node" {
     ),
 
     file("./butane/0002_users.yml"),
+    file("butane/0010_storage.yml"),
 
     file("./butane/00_base-k8s-token.yml"),
     file("./butane/00_base-k8s.yml"),
@@ -148,7 +149,17 @@ data "ct_config" "cplane-node" {
         file("butane/70_helm.yml")
       ]
       : []
+    ),
+
+    (
+      [
+        templatefile(
+          "./butane/99_catchall.yml", {
+          }
+        )
+      ]
     )
+
 
   ])
 }
@@ -177,12 +188,20 @@ resource "proxmox_virtual_environment_vm" "flatcar_vm" {
   # should be true if qemu agent is not installed / enabled on the VM
   stop_on_destroy = true
 
+  keyboard_layout = "it"
+
   disk {
     datastore_id = "local-lvm"
     import_from  = proxmox_virtual_environment_download_file.flatcar_image[each.key].id
     interface    = "virtio0"
     iothread     = true
-    discard      = "on"
+    size         = 20
+  }
+
+  disk {
+    datastore_id = "local-lvm"
+    interface    = "virtio1"
+    iothread     = true
     size         = 20
   }
 
@@ -191,6 +210,7 @@ resource "proxmox_virtual_environment_vm" "flatcar_vm" {
   }
 
   cpu {
+    type = "x86-64-v3"
     cores = 2
   }
 

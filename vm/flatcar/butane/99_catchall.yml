@@ -1,0 +1,20 @@
+---
+variant: flatcar
+version: 1.1.0
+storage:
+
+  filesystems:
+
+  links:
+
+  files:
+
+    - path: /etc/crio/crio.conf.d/20-crio.conf
+      contents:
+        inline: |
+          [crio.image]
+          short_name_mode = "disabled"
+          unqualified-search-registries = ["docker.io"]
+
+systemd:
+  units:
