@@ -7,4 +7,5 @@ resources:
   - ./helmrepos/openebs.yaml
   - ./namespaces/namespaces.yaml
   - ./metallb/metallb.yaml
+  - ./openebs/openebs.yaml
   - ./podinfo/podinfo.yaml
