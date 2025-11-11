@@ -5,5 +5,7 @@ metadata:
   name: openebs
   namespace: openebs
 spec:
+  dependsOn:
+    - name: namespaces
   interval: 1m
   url: https://openebs.github.io/openebs
