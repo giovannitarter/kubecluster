@@ -5,6 +5,8 @@ metadata:
   name: openebs
   namespace: openebs
 spec:
+  dependsOn:
+    - name: namespaces
   interval: 1m
   chart:
     spec:
@@ -13,5 +15,5 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: openebs
-        namespace: openebs
+        namespace: flux-system
       interval: 1m
