@@ -60,7 +60,7 @@ data "ct_config" "cplane-node" {
     ),
 
     file("./butane/0002_users.yml"),
-    file("butane/0010_storage.yml"),
+    file("./butane/0010_storage.yml"),
 
     file("./butane/00_base-k8s-token.yml"),
     file("./butane/00_base-k8s.yml"),

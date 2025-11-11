@@ -20,7 +20,7 @@ systemd:
 
   units:
 
-    - name: flux-bootstrap.service
+    - name: flux.service
       enabled: true
       contents: |
         [Unit]

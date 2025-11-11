@@ -7,22 +7,24 @@ storage:
     - device: /dev/vdb
       format: ext4
       wipe_filesystem: true
-      label: pvolume
+      label: pvolume1
 
   links:
+    - path: /var/openebs/local
+      target: /media/pvolume1
 
   files:
 
 systemd:
   units:
-    - name: media-pvolume.mount
+    - name: media-pvolume1.mount
       enabled: true
       contents: |
         [Unit]
         Before=local-fs.target
         [Mount]
-        What=/dev/disk/by-label/pvolume
-        Where=/media/pvolume
+        What=/dev/disk/by-label/pvolume1
+        Where=/media/pvolume1
         Type=ext4
         [Install]
         WantedBy=local-fs.target
