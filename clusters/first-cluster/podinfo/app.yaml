@@ -15,10 +15,10 @@ spec:
         run: podinfo
     spec:
       containers:
-      - name: podinfo
-        image: docker.io/stefanprodan/podinfo:latest
-        ports:
-        - containerPort: 9898
+        - name: podinfo
+          image: docker.io/stefanprodan/podinfo:latest
+          ports:
+            - containerPort: 9898
 
 ---
 
@@ -33,7 +33,7 @@ spec:
   type: LoadBalancer
 
   ports:
-  - port: 9898
+    - port: 9898
 
   selector:
     run: podinfo

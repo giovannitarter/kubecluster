@@ -1,17 +1,6 @@
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: namespaces
-  namespace: flux-system
-spec:
-  interval: 5m
-  path: "./clusters/first-cluster/namespaces"
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
----
+
+# kustomization for this dir
 
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
@@ -19,29 +8,34 @@ metadata:
   name: metallb
   namespace: flux-system
 spec:
-  dependsOn:
-    - name: namespaces
   interval: 5m
   path: "./clusters/first-cluster/metallb"
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
-  targetNamespace: metallb-system
+  dependsOn:
+    - name: namespaces
+      namespace: flux-system
 
 ---
+
+# configuration directory for helm
+
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: podinfo
+  name: metallb-conf
   namespace: flux-system
 spec:
+  interval: 5m
+
   dependsOn:
     - name: metallb
-  interval: 5m
-  path: "./clusters/first-cluster/podinfo"
+      namespace: flux-system
+
+  path: "./clusters/first-cluster/metallb/metallb-conf"
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
-  targetNamespace: default
