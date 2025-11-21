@@ -33,7 +33,8 @@ spec:
   type: LoadBalancer
 
   ports:
-    - port: 9898
+    - port: 8080
+      targetPort: 9898
 
   selector:
     run: podinfo

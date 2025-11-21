@@ -7,4 +7,5 @@ resources:
   - ./namespaces/kflux.yaml
   - ./metallb/kflux.yaml
   - ./openebs/kflux.yaml
+  - ./cnpg/kflux.yaml
   - ./podinfo/kflux.yaml
