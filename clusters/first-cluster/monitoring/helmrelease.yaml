@@ -1,0 +1,28 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      # version: ''
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: flux-system
+
+        # because we have a targetNamespace in the flux
+        # kustomization
+        # namespace:
+      interval: 1h
+
+  install:
+    # createNamespace: true
+    timeout: 5m
+
+  upgrade:
+    timeout: 5m

@@ -16,8 +16,6 @@ spec:
     kind: GitRepository
     name: flux-system
 
-  targetNamespace: cnpg-system
-
   dependsOn:
 
     - name: namespaces
