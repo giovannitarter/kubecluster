@@ -1,0 +1,73 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: monitoring
+
+spec:
+
+  type: LoadBalancer
+
+  ports:
+    - name: http-access
+      port: 8080
+      targetPort: 3000
+
+  selector:
+    app: grafana
+
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  name: grafana
+  labels:
+    app: grafana
+spec:
+  config:
+    security:
+      admin_user: admin
+      admin_password: grafana #pragma: allowlist secret
+
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: prometheus
+spec:
+  instanceSelector:
+    matchLabels:
+      app: grafana
+  datasource:
+    name: Prometheus
+    type: prometheus
+    uid: prometheus
+    url: http://prometheus-operator-kube-p-prometheus:9090/
+    access: proxy
+    isDefault: true
+    jsonData:
+      httpMethod: POST
+      timeInterval: 30s
+      # tlsSkipVerify: true
+    editable: false
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: alertmanager
+spec:
+  instanceSelector:
+    matchLabels:
+      app: grafana
+  datasource:
+    name: Alertmanager
+    type: alertmanager
+    uid: alertmanager
+    url: http://prometheus-operator-kube-p-alertmanager:9093/
+    access: proxy
+    jsonData:
+      handleGrafanaManagedAlerts: false
+      implementation: prometheus
+      # tlsSkipVerify: true
+    editable: false
