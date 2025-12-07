@@ -4,7 +4,7 @@ set -e
 
 # Set file paths
 cert_dir="./certs"
-output_yaml="butane/00_base-k8s-token.yaml"
+output_yaml="butane/00_base-k8s-token.yml"
 
 # Create cert directory
 mkdir -p "$cert_dir"
