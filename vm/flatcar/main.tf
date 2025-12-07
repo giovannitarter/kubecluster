@@ -30,7 +30,7 @@ resource "proxmox_virtual_environment_download_file" "flatcar_image" {
   content_type = "import"
   datastore_id = "local"
   node_name = each.value.pvenode
-  url          = "https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_proxmoxve_image.img"
+  url          = var.flatcar_linux_image_url
   overwrite    = false
   file_name = "flatcar_stable.qcow2"
 }
