@@ -1,0 +1,20 @@
+---
+services:
+
+  kubecluster_http_repo:
+    image: python:3.13
+
+    command: python -m http.server -d /release
+
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+      - "traefik.enable=false"
+
+    volumes:
+      - ./release:/release
+
+    ports:
+      - 8000:8000
+
+
+    restart: always
