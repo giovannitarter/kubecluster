@@ -29,12 +29,20 @@ spec:
 
   values:
 
+
     crds:
       upgradeJob:
         enabled: true
 
     grafana:
-      enabled: false
+      enabled: true
+
+      extraLabels:
+        app: grafana
+
+      adminUser: admin
+      adminPassword: grafana #pragma: allowlist secret
+
       forceDeployDatasources: true
       forceDeployDashboards: true
       defaultDashboardsEnabled: true
@@ -63,6 +71,6 @@ spec:
       immutable: false
     namespaceScope: true
     rbac:
-      create: true
+      create: false
     serviceAccount:
-      create: true
+      create: false

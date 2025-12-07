@@ -10,3 +10,4 @@ resources:
   - ./cnpg/kflux.yaml
   - ./podinfo/kflux.yaml
   - ./monitoring/kflux.yaml
+  - ./ingress/kflux.yaml

@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: ingress
+  namespace: flux-system
+
+spec:
+
+  interval: 5m
+  path: "./clusters/first-cluster/ingress"
+  prune: true
+  wait: true
+
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+
+  dependsOn:
+
+    - name: namespaces
+      namespace: flux-system
