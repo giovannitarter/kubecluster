@@ -41,7 +41,7 @@ spec:
         app: grafana
 
       adminUser: admin
-      adminPassword: grafana #pragma: allowlist secret
+      adminPassword: grafana  # pragma: allowlist secret`
 
       forceDeployDatasources: true
       forceDeployDashboards: true
@@ -71,6 +71,6 @@ spec:
       immutable: false
     namespaceScope: true
     rbac:
-      create: false
+      create: true
     serviceAccount:
-      create: false
+      create: true
