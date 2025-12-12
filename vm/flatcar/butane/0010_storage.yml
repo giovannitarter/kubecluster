@@ -21,10 +21,12 @@ systemd:
       enabled: true
       contents: |
         [Unit]
-        Before=local-fs.target
+        Description=Mount PV Partition
+
         [Mount]
         What=/dev/disk/by-label/pvolume1
         Where=/media/pvolume1
         Type=ext4
+        Options=rw,noatime
         [Install]
-        WantedBy=local-fs.target
+        WantedBy=multi-user.target
