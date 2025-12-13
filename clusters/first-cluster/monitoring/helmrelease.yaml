@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: kube-prometheus-stack
-      version: '79.8.*'
+      version: '80.*'
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
@@ -28,7 +28,6 @@ spec:
     timeout: 5m
 
   values:
-
 
     crds:
       upgradeJob:
