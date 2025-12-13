@@ -39,8 +39,10 @@ spec:
       extraLabels:
         app: grafana
 
-      adminUser: admin
-      adminPassword: grafana  # pragma: allowlist secret`
+      admin:
+        existingSecret: grafana-admin-credentials  # pragma: allowlist secret
+        userKey: GF_SECURITY_ADMIN_USER
+        passwordKey: GF_SECURITY_ADMIN_PASSWORD  # pragma: allowlist secret
 
       forceDeployDatasources: true
       forceDeployDashboards: true

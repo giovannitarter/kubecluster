@@ -6,3 +6,4 @@ resources:
   - ./helmrepo.yaml
   - ./helmrelease.yaml
   - ./extra.yaml
+  - ./secrets.yaml
