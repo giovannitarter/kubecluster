@@ -12,42 +12,42 @@ storage:
       target: /dev/null
       overwrite: true
 
-    - target: /opt/extensions/crio/crio-v1.34.0-x86-64.raw
+    - target: /opt/extensions/crio/crio-v1.34.3-x86-64.raw
       path: /etc/extensions/crio.raw
       hard: false
 
-    - target: /opt/extensions/kubernetes/kubernetes-v1.34.1-x86-64.raw
+    - target: /opt/extensions/kubernetes/kubernetes-v1.35.0-x86-64.raw
       path: /etc/extensions/kubernetes.raw
       hard: false
 
-    - target: /opt/extensions/cilium/cilium-v0.18.7-x86-64.raw
+    - target: /opt/extensions/cilium/cilium-v0.18.9-x86-64.raw
       path: /etc/extensions/cilium.raw
       hard: false
 
   files:
 
     # kubernetes
-    - path: /etc/sysupdate.kubernetes.d/kubernetes-v1.34.conf
+    - path: /etc/sysupdate.kubernetes.d/kubernetes.conf
       contents:
-        source: https://extensions.flatcar.org/extensions/kubernetes/kubernetes-v1.34.conf
+        source: https://github.com/flatcar/sysext-bakery/releases/download/kubernetes-v1.35.0/kubernetes.conf
 
-    - path: /opt/extensions/kubernetes/kubernetes-v1.34.1-x86-64.raw
+    - path: /opt/extensions/kubernetes/kubernetes-v1.35.0-x86-64.raw
       contents:
-        source: https://extensions.flatcar.org/extensions/kubernetes-v1.34.1-x86-64.raw
+        source: https://github.com/flatcar/sysext-bakery/releases/download/kubernetes-v1.35.0/kubernetes-v1.35.0-x86-64.raw
 
     # cri-o runtime
-    - path: /opt/extensions/crio/crio-v1.34.0-x86-64.raw
+    - path: /opt/extensions/crio/crio-v1.34.3-x86-64.raw
       contents:
-        source: https://extensions.flatcar.org/extensions/crio-v1.34.0-x86-64.raw
+        source: https://extensions.flatcar.org/extensions/crio-v1.34.3-x86-64.raw
 
     - path: /etc/sysupdate.crio.d/crio.conf
       contents:
         source: https://extensions.flatcar.org/extensions/crio/crio.conf
 
     # clilium
-    - path: /opt/extensions/cilium/cilium-v0.18.7-x86-64.raw
+    - path: /opt/extensions/cilium/cilium-v0.18.9-x86-64.raw
       contents:
-        source: https://extensions.flatcar.org/extensions/cilium-v0.18.7-x86-64.raw
+        source: https://extensions.flatcar.org/extensions/cilium-v0.18.9-x86-64.raw
 
     - path: /etc/sysupdate.cilium.d/cilium.conf
       contents:
@@ -106,18 +106,18 @@ systemd:
               then touch /run/reboot-required; \
               fi"
 
-    - name: zfs-setup.service
-      enabled: true
-      contents: |
-        [Unit]
-        Description=Load zfs kernel modules
-        After=local-fs-pre.target
-        Wants=local-fs-pre.target
-
-        [Service]
-        Type=oneshot
-        ExecStart=/usr/bin/modprobe zfs
-        RemainAfterExit=true
-
-        [Install]
-        WantedBy=multi-user.target
+#    - name: zfs-setup.service
+#      enabled: true
+#      contents: |
+#        [Unit]
+#        Description=Load zfs kernel modules
+#        After=local-fs-pre.target
+#        Wants=local-fs-pre.target
+#
+#        [Service]
+#        Type=oneshot
+#        ExecStart=/usr/bin/modprobe zfs
+#        RemainAfterExit=true
+#
+#        [Install]
+#        WantedBy=multi-user.target
