@@ -10,11 +10,11 @@ output_yaml="butane/00_base-k8s-token.yml"
 mkdir -p "$cert_dir"
 
 # Generate the token
-token=$(echo "$(tr -dc 'a-z0-9' < /dev/urandom | head -c 6).$(tr -dc 'a-z0-9' < /dev/urandom | head -c 16)")
-encoded_token=$(echo -n "$token" | base64)
+token="$(tr -dc 'a-z0-9' < /dev/urandom | head -c 6).$(tr -dc 'a-z0-9' < /dev/urandom | head -c 16)"
+# encoded_token=$(echo -n "$token" | base64)
 
 # Generate Kubernetes CA (used for cluster signing)
-openssl req -x509 -newkey rsa:2048 -keyout "$cert_dir/ca.key" -out "$cert_dir/ca.crt" -days 365 -nodes -subj "/CN=k8s-ca"
+openssl req -x509 -newkey rsa:2048 -keyout "$cert_dir/ca.key" -out "$cert_dir/ca.crt" -days 365 -nodes -subj "/CN=k8s-ca" -addext "keyUsage=critical,digitalSignature,keyCertSign"
 
 # Generate Front Proxy CA (used for API server aggregation)
 openssl req -x509 -newkey rsa:2048 -keyout "$cert_dir/front-proxy-ca.key" -out "$cert_dir/front-proxy-ca.crt" -days 365 -nodes -subj "/CN=front-proxy-ca"
@@ -44,7 +44,7 @@ etcd_ca_key=$(sed "s/^/${indent}/" "$cert_dir/etcd-ca.key")
 
 # Compute CA hash
 ca_hash="sha256:$(openssl x509 -pubkey -in "$cert_dir/ca.crt" | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //')"
-encoded_base64_ca_hash=$(echo -n "$ca_hash" | base64 -w 0)
+# encoded_base64_ca_hash=$(echo -n "$ca_hash" | base64 -w 0)
 
 # Write the header to the output YAML file
 cat > "$output_yaml" <<-EOF

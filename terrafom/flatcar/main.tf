@@ -98,6 +98,7 @@ data "ct_config" "cplane-node" {
       [
       templatefile(
         "./butane/30_cplane-master.yml", {
+          hostname = each.key
         }
       ),
       templatefile(
@@ -113,6 +114,7 @@ data "ct_config" "cplane-node" {
       [
       templatefile(
         "./butane/32_cpnode-join.yml", {
+          hostname = each.key
         }
       )
       ]
@@ -201,6 +203,13 @@ resource "proxmox_virtual_environment_vm" "flatcar_vm" {
   disk {
     datastore_id = "local-lvm"
     interface    = "virtio1"
+    iothread     = true
+    size         = 20
+  }
+
+  disk {
+    datastore_id = "local-lvm"
+    interface    = "virtio2"
     iothread     = true
     size         = 20
   }

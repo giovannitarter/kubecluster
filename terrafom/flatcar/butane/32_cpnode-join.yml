@@ -39,6 +39,10 @@ systemd:
           /etc/kubernetes/admin.conf \
           /home/core/.kube/config
         ExecStartPre=/usr/bin/chown -R core:core /home/core/.kube
+        ExecStartPre=kubectl \
+           --kubeconfig=/etc/kubernetes/admin.conf \
+          taint node ${hostname} \
+          node-role.kubernetes.io/control-plane:NoSchedule-
         ExecStart=/usr/bin/true
         [Install]
         WantedBy=multi-user.target

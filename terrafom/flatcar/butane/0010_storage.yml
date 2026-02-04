@@ -9,11 +9,18 @@ storage:
       wipe_filesystem: true
       label: pvolume1
 
+    - device: /dev/vdc
+      format: ext4
+      wipe_filesystem: true
+      label: longhorn1
+
   links:
     - path: /var/openebs/local
       target: /media/pvolume1
 
+
   files:
+
 
 systemd:
   units:
@@ -30,3 +37,23 @@ systemd:
         Options=rw,noatime
         [Install]
         WantedBy=multi-user.target
+
+    - name: var-lib-longhorn.mount
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Mount PV Partition Longhorn
+
+        [Mount]
+        What=/dev/disk/by-label/longhorn1
+        Where=/var/lib/longhorn
+        Type=ext4
+        Options=rw,noatime
+        [Install]
+        WantedBy=multi-user.target
+
+    - name: iscsid.service
+      enabled: true
+
+    - name: iscsi.service
+      enabled: true
