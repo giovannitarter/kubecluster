@@ -25,4 +25,4 @@ spec:
 
   values:
     defaultSettings:
-      defaultDataPath: /media/pvolume1
+      defaultDataPath: "/var/lib/longhorn/"

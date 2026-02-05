@@ -24,6 +24,10 @@ spec:
     - name: openebs
       namespace: flux-system
 
+    - name: longhorn
+      namespace: flux-system
+
+
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
