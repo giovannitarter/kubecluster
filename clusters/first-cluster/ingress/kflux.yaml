@@ -20,3 +20,6 @@ spec:
 
     - name: namespaces
       namespace: flux-system
+
+    - name: metallb-conf
+      namespace: flux-system
