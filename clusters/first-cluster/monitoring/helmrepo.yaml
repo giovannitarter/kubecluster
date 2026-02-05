@@ -10,12 +10,10 @@ spec:
 
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
-kind: OCIRepository
+kind: HelmRepository
 metadata:
   name: grafana-repo
   namespace: flux-system
 spec:
   interval: 5m0s
-  url: oci://ghcr.io/grafana/helm-charts/grafana-operator
-  ref:
-    tag: v5.20.0
+  url: https://grafana.github.io/helm-charts
