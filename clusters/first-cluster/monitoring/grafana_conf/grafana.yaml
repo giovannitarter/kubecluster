@@ -1,18 +1,42 @@
 ---
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
-  name: grafana-ingress
+  name: grafana
+  namespace: monitoring
 spec:
-  entryPoints:
-    - web
-  routes:
-    - match: Host(`grafana.lan`)
-      kind: Rule
-      services:
-        - name: prometheus-grafana
-          port: 80
+  parentRefs:
+    - name: traefik-gateway
+      namespace: ingress
+  hostnames:
+    - grafana.lan
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
 
+      backendRefs:
+        - name: prometheus-grafana
+          namespace: monitoring
+          port: 80
+          weight: 1
+
+# ---
+# apiVersion: traefik.io/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: grafana-ingress
+# spec:
+#   entryPoints:
+#     - web
+#   routes:
+#     - match: Host(`grafana.lan`)
+#       kind: Rule
+#       services:
+#         - name: prometheus-grafana
+#           port: 80
+#
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: Grafana
@@ -22,6 +46,9 @@ metadata:
   labels:
     app: grafana
 spec:
+  # client:
+  #   tls:
+  #     insecureSkipVerify: true
   external:
     url: http://prometheus-grafana.monitoring.svc.cluster.local
     adminPassword:
