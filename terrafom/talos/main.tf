@@ -106,14 +106,25 @@ resource "talos_machine_configuration_apply" "this" {
   machine_configuration_input = data.talos_machine_configuration.this[each.key].machine_configuration
   node                        = each.value.addr
 
-  config_patches = [
+  config_patches = flatten(
+  [
+
     templatefile("${path.module}/templates/install-disk-and-hostname.yaml.tmpl", {
       hostname     = each.key
       install_disk = "/dev/vda"
     }),
-    file("${path.module}/files/cp-scheduling.yaml"),
-    #file("${path.module}/files/cni.yaml"),
+
+    (
+      each.value.type == "controlplane" ?
+      [
+        file("${path.module}/files/cp-scheduling.yaml"),
+        file("${path.module}/files/cni.yaml"),
+        file("${path.module}/files/cilium.yaml"),
+      ]
+      : []
+    ),
   ]
+  )
 }
 
 
