@@ -97,6 +97,50 @@ data "talos_client_configuration" "this" {
 }
 
 
+data "helm_template" "cilium" {
+  name       = "cilium"
+  repository = "https://helm.cilium.io/"
+  chart      = "cilium"
+  version    = "1.19.5"
+  kube_version = "1.36.0"
+  namespace  = "kube-system"
+
+  set = [
+    {
+      name  = "ipam.mode"
+      value = "kubernetes"
+    },
+    {
+      name  = "kubeProxyReplacement"
+      value = "true"
+    },
+    {
+      name  = "securityContext.capabilities.ciliumAgent"
+      value = "{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}"
+    },
+    {
+      name  = "securityContext.capabilities.cleanCiliumState"
+      value = "{NET_ADMIN,SYS_ADMIN,SYS_RESOURCE}"
+    },
+    {
+      name  = "cgroup.autoMount.enabled"
+      value = "false"
+    },
+    {
+      name  = "cgroup.hostRoot"
+      value = "/sys/fs/cgroup"
+    },
+    {
+      name  = "k8sServiceHost"
+      value = "localhost"
+    },
+    {
+      name  = "k8sServicePort"
+      value = "7445"
+    }
+  ]
+}
+
 resource "talos_machine_configuration_apply" "this" {
   depends_on = [proxmox_virtual_environment_vm.talos_vms]
 
@@ -119,7 +163,22 @@ resource "talos_machine_configuration_apply" "this" {
       [
         file("${path.module}/files/cp-scheduling.yaml"),
         file("${path.module}/files/cni.yaml"),
-        file("${path.module}/files/cilium.yaml"),
+
+        file("${path.module}/files/cilium-sa.yaml"),
+        yamlencode({
+          cluster = {
+            inlineManifests = [
+              {
+                name     = "cilium"
+                contents = join("---\n", [
+                  data.helm_template.cilium.manifest,
+                  "",
+                ])
+              }
+            ]
+          }
+        }),
+
       ]
       : []
     ),

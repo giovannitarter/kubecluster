@@ -1,0 +1,12 @@
+---
+cluster:
+  inlineManifests:
+    - name: cilium-sa
+      contents: |
+        ---
+        # Source: cilium/templates/cilium-agent/serviceaccount.yaml
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: "cilium"
+          namespace: kube-system
