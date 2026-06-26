@@ -4,10 +4,11 @@ resource "proxmox_download_file" "talos_image" {
   for_each = var.nodes
   node_name = each.value.pvenode
 
-  content_type       = "import"
-  datastore_id       = "local"
-  file_name          = "metal-amd64.qcow2"
-  url                = "https://factory.talos.dev/image/579da0b3ef926f44676438f6dc74ef3fb2588d561ad0377752e42a0bd4373657/v1.13.4/metal-amd64.qcow2"
+  content_type = "import"
+  datastore_id = "local"
+  file_name = join("", ["metal-amd64", each.key, ".qcow2"])
+  url = "https://factory.talos.dev/image/${var.talos_schematic}/${var.talos_version}/metal-amd64.qcow2"
+  overwrite = true
   #checksum           = ""
   #checksum_algorithm = "sha512"
 }
@@ -21,7 +22,7 @@ resource "proxmox_virtual_environment_vm" "talos_vms" {
   node_name = each.value.pvenode
 
   # should be true if qemu agent is not installed / enabled on the VM
-  stop_on_destroy = false
+  stop_on_destroy = true
 
   disk {
     datastore_id = "local-lvm"
@@ -31,6 +32,20 @@ resource "proxmox_virtual_environment_vm" "talos_vms" {
     discard      = "on"
     size         = 10
   }
+
+  disk {
+    datastore_id = "local-lvm"
+    interface    = "virtio1"
+    iothread     = true
+    size         = 40
+  }
+
+  #disk {
+  #  datastore_id = "local-lvm"
+  #  interface    = "virtio2"
+  #  iothread     = true
+  #  size         = 20
+  #}
 
   agent {
     enabled = true
@@ -44,6 +59,13 @@ resource "proxmox_virtual_environment_vm" "talos_vms" {
   network_device {
     bridge = "vmbr0"
     mac_address = each.value.mac
+
+    # setting network device to solve vxlan packet drop
+    # https://forum.proxmox.com/threads/kubernetes-overlay-networking-breaks-when-upgrading-from-pve-9-1-to-pve-9-2-3.183963/
+    model = "e1000"
+
+    firewall = false
+    #link_down = false
   }
 
   memory {
@@ -76,7 +98,7 @@ resource "proxmox_virtual_environment_vm" "talos_vms" {
 }
 
 resource "talos_machine_secrets" "this" {
-  talos_version = "v1.13.4"
+  talos_version = "v1.13.5"
 }
 
 
@@ -102,7 +124,7 @@ data "helm_template" "cilium" {
   repository = "https://helm.cilium.io/"
   chart      = "cilium"
   version    = "1.19.5"
-  kube_version = "1.36.0"
+  kube_version = var.kube_version
   namespace  = "kube-system"
 
   set = [
@@ -114,6 +136,14 @@ data "helm_template" "cilium" {
       name  = "kubeProxyReplacement"
       value = "true"
     },
+    #{
+    #  name =  "routingMode"
+    #  value = "tunnel"
+    #},
+    #{
+    #  name = "tunnelProtocol"
+    #  value = "vxlan"
+    #},
     {
       name  = "securityContext.capabilities.ciliumAgent"
       value = "{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}"
@@ -141,6 +171,31 @@ data "helm_template" "cilium" {
   ]
 }
 
+
+data "helm_template" "piraeus-operator" {
+  name = "piraeus-operator"
+  chart = "oci://ghcr.io/piraeusdatastore/piraeus-operator/piraeus"
+  kube_version = var.kube_version
+  namespace  = "storage-system"
+  create_namespace = true
+  set = [
+    {
+      name = "installCRDs"
+      value = "true"
+    },
+  ]
+}
+
+
+data "helm_template" "linstore-cluster" {
+  name = "linstor-cluster"
+  chart = "oci://ghcr.io/piraeusdatastore/helm-charts/linstor-cluster"
+  kube_version = var.kube_version
+  namespace  = "storage-system"
+  create_namespace = true
+  set = []
+}
+
 resource "talos_machine_configuration_apply" "this" {
   depends_on = [proxmox_virtual_environment_vm.talos_vms]
 
@@ -158,12 +213,42 @@ resource "talos_machine_configuration_apply" "this" {
       install_disk = "/dev/vda"
     }),
 
+    [
+      file("${path.module}/files/disks.yaml"),
+      file("${path.module}/files/prism.yaml"),
+      #      yamlencode({
+      #        cluster = {
+      #          inlineManifests = [
+      #            {
+      #              name     = "disks"
+      #              contents = <<EOF
+      #        ---
+      #        apiVersion: v1alpha1
+      #        kind: VolumeConfig
+      #        name: EPHEMERAL
+      #        provisioning:
+      #          maxSize: 10GiB
+      #          grow: false
+      #        ---
+      #        apiVersion: v1alpha1
+      #        kind: UserVolumeConfig
+      #        name: linstor-storage
+      #        provisioning:
+      #          diskSelector:
+      #            match: dev_path == '/dev/vdb'
+      #        EOF
+      #            }
+      #          ]
+      #        }
+      #      }),
+    ],
+
     (
       each.value.type == "controlplane" ?
       [
         file("${path.module}/files/cp-scheduling.yaml"),
+        file("${path.module}/files/drdb.yaml"),
         file("${path.module}/files/cni.yaml"),
-
         file("${path.module}/files/cilium-sa.yaml"),
         yamlencode({
           cluster = {
@@ -182,6 +267,48 @@ resource "talos_machine_configuration_apply" "this" {
       ]
       : []
     ),
+
+
+    #(
+    #  [
+    #    yamlencode({
+    #      cluster = {
+    #        inlineManifests = [
+    #          {
+    #            name     = "datastore-piraeus-operator"
+    #            contents = join(
+    #              "---\n", [
+    #              data.helm_template.piraeus-operator.manifest,
+    #              "",
+    #            ])
+    #          }
+    #        ]
+    #      }
+    #    }),
+    #  ]
+    #),
+    #
+    #(
+    #  [
+    #    yamlencode({
+    #      cluster = {
+    #        inlineManifests = [
+    #          {
+    #            name     = "datastore-linstore-cluster"
+    #            contents = join(
+    #              "---\n", [
+    #              data.helm_template.linstore-cluster.manifest,
+    #              "",
+    #            ])
+    #          }
+    #        ]
+    #      }
+    #    }),
+    #  ]
+    #),
+
+
+
   ]
   )
 }

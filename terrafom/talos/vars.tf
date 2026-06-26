@@ -1,4 +1,22 @@
 
+variable "talos_schematic" {
+  description = "talos image"
+  type        = string
+  default =   "4a2a150c070e12b39ba5372bd791c3dae6de55b6fdfce708e300e605470ce29b" #pragma: allowlist secret
+}
+
+#customization:
+#    systemExtensions:
+#        officialExtensions:
+#            - siderolabs/binfmt-misc
+#            - siderolabs/drbd
+#            - siderolabs/fuse3
+#            - siderolabs/intel-ucode
+#            - siderolabs/iscsi-tools
+#            - siderolabs/nvme-cli
+#            - siderolabs/qemu-guest-agent
+#            - siderolabs/zfs
+
 variable "cluster_name" {
   description = "A name to provide for the Talos cluster"
   type        = string
@@ -8,8 +26,20 @@ variable "cluster_name" {
 variable "cluster_endpoint" {
   description = "The endpoint for the Talos cluster"
   type        = string
-  #default = "https://kube.lan:6443"
-  default = "https://192.168.2.71:6443"
+  default = "https://kube.lan:6443"
+}
+
+
+variable "kube_version" {
+  description = "Kubernetes version"
+  type        = string
+  default = "1.36.0"
+}
+
+variable "talos_version" {
+  description = "Kubernetes version"
+  type        = string
+  default = "1.13.5"
 }
 
 #variable "flatcar_linux_image_url" {
@@ -57,6 +87,7 @@ variable "nodes" {
       cird = "24",
       priority = 101
       mac = "bc:24:11:02:4d:01"
+      mem = 3072,
     },
     cplane2 = {
       type = "controlplane",
@@ -65,6 +96,7 @@ variable "nodes" {
       cird = "24",
       priority = 100
       mac = "bc:24:11:02:4d:02"
+      mem = 3072,
     },
     cplane3 = {
       type = "controlplane",
@@ -73,6 +105,7 @@ variable "nodes" {
       cird = "24",
       priority = 99
       mac = "bc:24:11:02:4d:03"
+      mem = 3072,
     }
     worker4 = {
       type = "worker",
@@ -81,7 +114,7 @@ variable "nodes" {
       cird = "24",
       priority = 91
       mac = "bc:24:11:02:4d:04"
-      mem = 2048,
+      mem = 1024,
     },
     worker5 = {
       type = "worker",
@@ -90,7 +123,7 @@ variable "nodes" {
       cird = "24",
       priority = 90
       mac = "bc:24:11:02:4d:05"
-      mem = 2048,
+      mem = 1024,
     },
     worker6 = {
       type = "worker",
@@ -99,7 +132,7 @@ variable "nodes" {
       cird = "24",
       priority = 89
       mac = "bc:24:11:02:4d:06",
-      mem = 2048,
+      mem = 1024,
     }
 
     # worker7 = {
