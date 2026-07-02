@@ -1,0 +1,63 @@
+---
+cluster:
+  extraManifests:
+    - https://github.com/piraeusdatastore/piraeus-operator/releases/latest/download/manifest.yaml
+
+  inlineManifests:
+
+    - name: linstor-cluster
+      contents: |
+        apiVersion: piraeus.io/v1
+        kind: LinstorCluster
+        metadata:
+          name: linstorcluster
+        spec: {}
+
+    - name: linstor-satellite-config
+      contents: |
+        apiVersion: piraeus.io/v1
+        kind: LinstorSatelliteConfiguration
+        metadata:
+          name: talos-loader-override
+        spec:
+          podTemplate:
+            spec:
+              initContainers:
+                - name: drbd-shutdown-guard
+                  $patch: delete
+                - name: drbd-module-loader
+                  $patch: delete
+              volumes:
+                - name: run-systemd-system
+                  $patch: delete
+                - name: run-drbd-shutdown-guard
+                  $patch: delete
+                - name: systemd-bus-socket
+                  $patch: delete
+                - name: lib-modules
+                  $patch: delete
+                - name: usr-src
+                  $patch: delete
+                - name: etc-lvm-backup
+                  hostPath:
+                    path: /var/etc/lvm/backup
+                    type: DirectoryOrCreate
+                - name: etc-lvm-archive
+                  hostPath:
+                    path: /var/etc/lvm/archive
+                    type: DirectoryOrCreate
+
+    - name: storage-pool-zfs
+      contents: |
+        apiVersion: piraeus.io/v1
+        kind: LinstorSatelliteConfiguration
+        metadata:
+          name: zfs-storage-pool
+        spec:
+          storagePools:
+            - name: zfs-thin
+              zfsThinPool:
+                zPool: zfs-linstor
+              source:
+                hostDevices:
+                  - /dev/vdb

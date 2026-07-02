@@ -40,13 +40,6 @@ resource "proxmox_virtual_environment_vm" "talos_vms" {
     size         = 40
   }
 
-  #disk {
-  #  datastore_id = "local-lvm"
-  #  interface    = "virtio2"
-  #  iothread     = true
-  #  size         = 20
-  #}
-
   agent {
     enabled = true
   }
@@ -69,7 +62,7 @@ resource "proxmox_virtual_environment_vm" "talos_vms" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = each.value.mem
     floating = 0
   }
 
@@ -216,40 +209,16 @@ resource "talos_machine_configuration_apply" "this" {
     [
       file("${path.module}/files/disks.yaml"),
       file("${path.module}/files/prism.yaml"),
-      #      yamlencode({
-      #        cluster = {
-      #          inlineManifests = [
-      #            {
-      #              name     = "disks"
-      #              contents = <<EOF
-      #        ---
-      #        apiVersion: v1alpha1
-      #        kind: VolumeConfig
-      #        name: EPHEMERAL
-      #        provisioning:
-      #          maxSize: 10GiB
-      #          grow: false
-      #        ---
-      #        apiVersion: v1alpha1
-      #        kind: UserVolumeConfig
-      #        name: linstor-storage
-      #        provisioning:
-      #          diskSelector:
-      #            match: dev_path == '/dev/vdb'
-      #        EOF
-      #            }
-      #          ]
-      #        }
-      #      }),
+      file("${path.module}/files/drdb.yaml"),
     ],
 
     (
       each.value.type == "controlplane" ?
       [
         file("${path.module}/files/cp-scheduling.yaml"),
-        file("${path.module}/files/drdb.yaml"),
         file("${path.module}/files/cni.yaml"),
         file("${path.module}/files/cilium-sa.yaml"),
+        file("${path.module}/files/datastore.yaml"),
         yamlencode({
           cluster = {
             inlineManifests = [
@@ -267,48 +236,6 @@ resource "talos_machine_configuration_apply" "this" {
       ]
       : []
     ),
-
-
-    #(
-    #  [
-    #    yamlencode({
-    #      cluster = {
-    #        inlineManifests = [
-    #          {
-    #            name     = "datastore-piraeus-operator"
-    #            contents = join(
-    #              "---\n", [
-    #              data.helm_template.piraeus-operator.manifest,
-    #              "",
-    #            ])
-    #          }
-    #        ]
-    #      }
-    #    }),
-    #  ]
-    #),
-    #
-    #(
-    #  [
-    #    yamlencode({
-    #      cluster = {
-    #        inlineManifests = [
-    #          {
-    #            name     = "datastore-linstore-cluster"
-    #            contents = join(
-    #              "---\n", [
-    #              data.helm_template.linstore-cluster.manifest,
-    #              "",
-    #            ])
-    #          }
-    #        ]
-    #      }
-    #    }),
-    #  ]
-    #),
-
-
-
   ]
   )
 }
