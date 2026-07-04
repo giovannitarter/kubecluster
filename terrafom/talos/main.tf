@@ -129,14 +129,6 @@ data "helm_template" "cilium" {
       name  = "kubeProxyReplacement"
       value = "true"
     },
-    #{
-    #  name =  "routingMode"
-    #  value = "tunnel"
-    #},
-    #{
-    #  name = "tunnelProtocol"
-    #  value = "vxlan"
-    #},
     {
       name  = "securityContext.capabilities.ciliumAgent"
       value = "{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}"
@@ -165,29 +157,17 @@ data "helm_template" "cilium" {
 }
 
 
-data "helm_template" "piraeus-operator" {
-  name = "piraeus-operator"
-  chart = "oci://ghcr.io/piraeusdatastore/piraeus-operator/piraeus"
+data "helm_template" "flux-operator" {
+  name       = "flux"
+  repository = "oci://ghcr.io/controlplaneio-fluxcd/charts/"
+  chart      = "flux-operator"
+  #version    = ""
   kube_version = var.kube_version
-  namespace  = "storage-system"
-  create_namespace = true
-  set = [
-    {
-      name = "installCRDs"
-      value = "true"
-    },
-  ]
-}
-
-
-data "helm_template" "linstore-cluster" {
-  name = "linstor-cluster"
-  chart = "oci://ghcr.io/piraeusdatastore/helm-charts/linstor-cluster"
-  kube_version = var.kube_version
-  namespace  = "storage-system"
+  namespace  = "flux-system"
   create_namespace = true
   set = []
 }
+
 
 resource "talos_machine_configuration_apply" "this" {
   depends_on = [proxmox_virtual_environment_vm.talos_vms]
@@ -219,6 +199,7 @@ resource "talos_machine_configuration_apply" "this" {
         file("${path.module}/files/cni.yaml"),
         file("${path.module}/files/cilium-sa.yaml"),
         file("${path.module}/files/datastore.yaml"),
+
         yamlencode({
           cluster = {
             inlineManifests = [
@@ -233,9 +214,26 @@ resource "talos_machine_configuration_apply" "this" {
           }
         }),
 
+
+        yamlencode({
+          cluster = {
+            inlineManifests = [
+              {
+                name     = "flux-operator"
+                contents = join("---\n", [
+                  data.helm_template.flux-operator.manifest,
+                  "",
+                ])
+              }
+            ]
+          }
+        }),
+        file("${path.module}/files/flux-bootstrap.yaml"),
+
       ]
       : []
-    ),
+    ), # == "controlplane"
+
   ]
   )
 }
