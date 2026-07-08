@@ -7,7 +7,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 5m
-  path: "./clusters/first-cluster/storageclasses"
+  path: "./clusters/talos-prod/storageclasses"
   prune: true
   sourceRef:
     kind: GitRepository
