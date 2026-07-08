@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+
+import argparse
+import pathlib
+import sys
+from typing import TextIO
+
+from ruamel.yaml import YAML
+from ruamel.yaml.scalarstring import LiteralScalarString
+
+
+def build_inline_manifest(manifest_path: pathlib.Path, manifest_name: str | None = None) -> dict:
+    """
+    Build a Talos-style inlineManifests YAML object from a manifest file.
+    """
+
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Manifest file does not exist: {manifest_path}")
+
+    if not manifest_path.is_file():
+        raise ValueError(f"Manifest path is not a file: {manifest_path}")
+
+    content = manifest_path.read_text(encoding="utf-8")
+
+    return {
+        "cluster": {
+            "inlineManifests": [
+                {
+                    "name": manifest_name or manifest_path.name,
+                    "content": LiteralScalarString(content),
+                }
+            ]
+        }
+    }
+
+
+def write_yaml(data: dict, output: TextIO) -> None:
+    """
+    Dump YAML using ruamel.yaml, preserving the literal block style for multiline content.
+    """
+
+    yaml = YAML()
+    yaml.default_flow_style = False
+    yaml.indent(mapping=2, sequence=4, offset=2)
+
+    yaml.dump(data, output)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="talos-inline-manifest",
+        description="Embed a Kubernetes manifest file into a Talos inlineManifests YAML block.",
+    )
+
+    parser.add_argument(
+        "manifest",
+        help="Path to the Kubernetes manifest file to embed.",
+    )
+
+    parser.add_argument(
+        "--name",
+        help="Name to use for the inline manifest. Defaults to the manifest filename.",
+    )
+
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="Output file. Defaults to stdout.",
+    )
+
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+
+    manifest_path = pathlib.Path(args.manifest)
+
+    try:
+        result = build_inline_manifest(
+            manifest_path=manifest_path,
+            manifest_name=args.name,
+        )
+
+        if args.output:
+            output_path = pathlib.Path(args.output)
+            with output_path.open("w", encoding="utf-8") as outfile:
+                write_yaml(result, outfile)
+        else:
+            write_yaml(result, sys.stdout)
+
+    except FileNotFoundError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    except OSError as exc:
+        print(f"error: failed to read or write file: {exc}", file=sys.stderr)
+        return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

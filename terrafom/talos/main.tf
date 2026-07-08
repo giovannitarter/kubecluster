@@ -228,7 +228,9 @@ resource "talos_machine_configuration_apply" "this" {
             ]
           }
         }),
+        file("${path.module}/files/flux-github-secret.yaml"),
         file("${path.module}/files/flux-bootstrap.yaml"),
+
 
       ]
       : []
