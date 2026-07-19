@@ -1,22 +1,4 @@
 
-#Variable "talos_schematic" {
-#  description = "talos image"
-#  type        = string
-#  #  default =   "4a2a150c070e12b39ba5372bd791c3dae6de55b6fdfce708e300e605470ce29b" #pragma: allowlist secret
-#}
-
-#customization:
-#    systemExtensions:
-#        officialExtensions:
-#            - siderolabs/binfmt-misc
-#            - siderolabs/drbd
-#            - siderolabs/fuse3
-#            - siderolabs/intel-ucode
-#            - siderolabs/iscsi-tools
-#            - siderolabs/nvme-cli
-#            - siderolabs/qemu-guest-agent
-#            - siderolabs/zfs
-
 variable "cluster_name" {
   description = "A name to provide for the Talos cluster"
   type        = string
@@ -41,12 +23,6 @@ variable "talos_version" {
   type        = string
   default = "1.13.6"
 }
-
-#variable "flatcar_linux_image_url" {
-#  description = "Flatcar Linux Image url"
-#  type = string
-#  default = "http://cntsrv1.lan:8000/flatcar_production_proxmoxve_image.img"
-#}
 
 variable "pve_api_token" {
   description = "Proxmox API Token"

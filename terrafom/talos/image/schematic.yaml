@@ -10,4 +10,4 @@ customization:
             - siderolabs/nvme-cli
             - siderolabs/qemu-guest-agent
             - siderolabs/zfs
-    bootloader: sd-boot
+#    bootloader: sd-boot

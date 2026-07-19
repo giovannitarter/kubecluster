@@ -78,7 +78,7 @@ resource "proxmox_virtual_environment_vm" "talos_vms" {
 }
 
 resource "talos_machine_secrets" "this" {
-  talos_version = "v1.13.5"
+  talos_version = var.talos_version
 }
 
 
@@ -182,6 +182,7 @@ resource "talos_machine_configuration_apply" "this" {
     (
       each.value.type == "controlplane" ?
       [
+        file("${path.module}/files/network.yaml"),
         file("${path.module}/files/cp-scheduling.yaml"),
         file("${path.module}/files/cni.yaml"),
         file("${path.module}/files/cilium-sa.yaml"),
