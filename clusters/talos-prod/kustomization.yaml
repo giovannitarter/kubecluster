@@ -5,3 +5,4 @@ kind: Kustomization
 resources:
   - ./namespaces/kflux.yaml
   - ./storageclasses/kflux.yaml
+  - ./metallb/kflux.yaml
