@@ -1,17 +1,4 @@
 
-resource "proxmox_download_file" "talos_image" {
-
-  for_each = var.nodes
-  node_name = each.value.pvenode
-
-  content_type = "import"
-  datastore_id = "local"
-  file_name = join("", ["metal-amd64", each.key, ".qcow2"])
-  url = "https://factory.talos.dev/image/${var.talos_schematic}/${var.talos_version}/metal-amd64.qcow2"
-  overwrite = true
-  #checksum           = ""
-  #checksum_algorithm = "sha512"
-}
 
 
 
@@ -26,7 +13,7 @@ resource "proxmox_virtual_environment_vm" "talos_vms" {
 
   disk {
     datastore_id = "local-lvm"
-    import_from  = proxmox_download_file.talos_image[each.key].id
+    import_from  = proxmox_download_file.talos_image[each.value.pvenode].id
     interface    = "virtio0"
     iothread     = true
     discard      = "on"

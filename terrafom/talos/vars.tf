@@ -1,9 +1,9 @@
 
-variable "talos_schematic" {
-  description = "talos image"
-  type        = string
-  default =   "4a2a150c070e12b39ba5372bd791c3dae6de55b6fdfce708e300e605470ce29b" #pragma: allowlist secret
-}
+#Variable "talos_schematic" {
+#  description = "talos image"
+#  type        = string
+#  #  default =   "4a2a150c070e12b39ba5372bd791c3dae6de55b6fdfce708e300e605470ce29b" #pragma: allowlist secret
+#}
 
 #customization:
 #    systemExtensions:
@@ -39,7 +39,7 @@ variable "kube_version" {
 variable "talos_version" {
   description = "Kubernetes version"
   type        = string
-  default = "1.13.5"
+  default = "1.13.6"
 }
 
 #variable "flatcar_linux_image_url" {
