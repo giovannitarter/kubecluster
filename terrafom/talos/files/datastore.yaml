@@ -1,7 +1,7 @@
 ---
 cluster:
   extraManifests:
-    - https://github.com/piraeusdatastore/piraeus-operator/releases/latest/download/manifest.yaml
+    - https://github.com/piraeusdatastore/piraeus-operator/releases/download/v2.10.7/manifest.yaml
 
   inlineManifests:
 

@@ -17,14 +17,21 @@ resource "proxmox_virtual_environment_vm" "talos_vms" {
     interface    = "virtio0"
     iothread     = true
     discard      = "on"
-    size         = 10
+    size         = 20
   }
 
   disk {
     datastore_id = "local-lvm"
     interface    = "virtio1"
     iothread     = true
-    size         = 40
+    size         = 30
+  }
+
+  disk {
+    datastore_id = "local-lvm"
+    interface    = "virtio2"
+    iothread     = true
+    size         = 10
   }
 
   agent {
@@ -184,6 +191,7 @@ resource "talos_machine_configuration_apply" "this" {
       [
         file("${path.module}/files/network.yaml"),
         file("${path.module}/files/cp-scheduling.yaml"),
+        file("${path.module}/files/cp.yaml"),
         file("${path.module}/files/cni.yaml"),
         file("${path.module}/files/cilium-sa.yaml"),
         file("${path.module}/files/datastore.yaml"),

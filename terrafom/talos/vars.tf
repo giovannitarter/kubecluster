@@ -21,7 +21,7 @@ variable "kube_version" {
 variable "talos_version" {
   description = "Kubernetes version"
   type        = string
-  default = "1.13.6"
+  default = "1.13.7"
 }
 
 variable "pve_api_token" {
@@ -63,7 +63,7 @@ variable "nodes" {
       cird = "24",
       priority = 101
       mac = "bc:24:11:02:4d:01"
-      mem = 4096,
+      mem = 6144,
     },
     cplane2 = {
       type = "controlplane",
@@ -72,7 +72,7 @@ variable "nodes" {
       cird = "24",
       priority = 100
       mac = "bc:24:11:02:4d:02"
-      mem = 4096,
+      mem = 6144,
     },
     cplane3 = {
       type = "controlplane",
@@ -81,7 +81,7 @@ variable "nodes" {
       cird = "24",
       priority = 99
       mac = "bc:24:11:02:4d:03"
-      mem = 4096,
+      mem = 6144,
     }
     worker4 = {
       type = "worker",
@@ -90,7 +90,7 @@ variable "nodes" {
       cird = "24",
       priority = 91
       mac = "bc:24:11:02:4d:04"
-      mem = 2048,
+      mem = 4096,
     },
     worker5 = {
       type = "worker",
@@ -99,7 +99,7 @@ variable "nodes" {
       cird = "24",
       priority = 90
       mac = "bc:24:11:02:4d:05"
-      mem = 2048,
+      mem = 4096,
     },
     worker6 = {
       type = "worker",
@@ -108,7 +108,7 @@ variable "nodes" {
       cird = "24",
       priority = 89
       mac = "bc:24:11:02:4d:06",
-      mem = 2048,
+      mem = 4096,
     }
 
     # worker7 = {
