@@ -27,7 +27,7 @@ def build_inline_manifest(manifest_path: pathlib.Path, manifest_name: str | None
             "inlineManifests": [
                 {
                     "name": manifest_name or manifest_path.name,
-                    "content": LiteralScalarString(content),
+                    "contents": LiteralScalarString(content),
                 }
             ]
         }

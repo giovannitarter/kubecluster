@@ -184,6 +184,7 @@ resource "talos_machine_configuration_apply" "this" {
       file("${path.module}/files/disks.yaml"),
       file("${path.module}/files/prism.yaml"),
       file("${path.module}/files/drdb.yaml"),
+      file("${path.module}/files/zfs-init.yaml"),
     ],
 
     (
@@ -194,7 +195,7 @@ resource "talos_machine_configuration_apply" "this" {
         file("${path.module}/files/cp.yaml"),
         file("${path.module}/files/cni.yaml"),
         file("${path.module}/files/cilium-sa.yaml"),
-        file("${path.module}/files/datastore.yaml"),
+        #file("${path.module}/files/datastore.yaml"),
 
         yamlencode({
           cluster = {
@@ -226,6 +227,7 @@ resource "talos_machine_configuration_apply" "this" {
         }),
         file("${path.module}/files/flux-github-secret.yaml"),
         file("${path.module}/files/flux-bootstrap.yaml"),
+        file("${path.module}/files/flux-agekey.yaml"),
 
 
       ]

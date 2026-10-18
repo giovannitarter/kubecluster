@@ -1,0 +1,92 @@
+---
+cluster:
+  inlineManifests:
+    - name: zfs-init
+      contents: |
+        apiVersion: apps/v1
+        kind: DaemonSet
+        metadata:
+          name: zfs-init
+          namespace: kube-system
+        spec:
+          selector:
+            matchLabels:
+              app: zfs-init
+          template:
+            metadata:
+              labels:
+                app: zfs-init
+            spec:
+              hostPID: true
+              tolerations:
+                - operator: Exists
+
+              containers:
+                - name: zfs-init
+                  image: alpine:3.22
+                  securityContext:
+                    privileged: true
+
+                  command:
+                    - /bin/sh
+                    - -ec
+                    - |
+                      POOL="tank"
+                      DISK="/dev/vdc"
+
+                      echo "Checking ZFS pool ${POOL} on ${DISK}"
+
+                      # Node doesn't have the expected disk.
+                      # Don't make the DaemonSet fail forever.
+                      if [ ! -b "${DISK}" ]; then
+                        echo "${DISK} does not exist on this node, skipping"
+                        sleep infinity
+                      fi
+
+                      # Pool is already imported.
+                      if chroot /host zpool list -H -o name "${POOL}" >/dev/null 2>&1; then
+                        echo "ZFS pool ${POOL} already exists"
+                        sleep infinity
+                      fi
+
+                      # Check whether this pool exists but simply isn't imported.
+                      if chroot /host zpool import "${POOL}" >/dev/null 2>&1; then
+                        echo "Existing ZFS pool ${POOL} found and imported"
+                        sleep infinity
+                      fi
+
+                      echo "Creating ZFS pool ${POOL} on ${DISK}"
+
+                      chroot /host zpool create \
+                        -o ashift=12 \
+                        -O mountpoint=/var/mnt/tank \
+                        -O compression=zstd \
+                        -O xattr=sa \
+                        -O acltype=posixacl \
+                        -O atime=off \
+                        "${POOL}" \
+                        "${DISK}"
+
+                      echo "ZFS pool created:"
+                      chroot /host zpool status "${POOL}"
+
+                      sleep infinity
+
+                  volumeMounts:
+                    - name: host-root
+                      mountPath: /host
+                      mountPropagation: Bidirectional
+
+                    - name: host-dev
+                      mountPath: /dev
+
+              volumes:
+                - name: host-root
+                  hostPath:
+                    path: /
+                    type: Directory
+
+                - name: host-dev
+                  hostPath:
+                    path: /dev
+                    type: Directory
