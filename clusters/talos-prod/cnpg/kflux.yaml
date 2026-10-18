@@ -1,0 +1,55 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cnpg
+  namespace: flux-system
+
+spec:
+
+  interval: 5m
+  path: "./clusters/talos-prod/cnpg"
+  prune: true
+  wait: true
+
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+
+  dependsOn:
+
+    - name: namespaces
+      namespace: flux-system
+
+    #- name: openebs
+    #  namespace: flux-system
+
+    #- name: longhorn
+    #  namespace: flux-system
+
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cnpg-cluster
+  namespace: flux-system
+
+spec:
+
+  interval: 5m
+  path: "./clusters/talos-prod/cnpg/cnpg_cluster"
+  prune: true
+  wait: true
+
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+
+  targetNamespace: default
+
+  dependsOn:
+    - name: cnpg
+      namespace: flux-system
+    #- name: linstor
+    #  namespace: flux-system

@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: borgmatic
+  namespace: backup
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: borgmatic
+
+  template:
+    metadata:
+      labels:
+        app: borgmatic
+
+    spec:
+      containers:
+        - name: borgmatic
+          image: ghcr.io/borgmatic-collective/borgmatic:latest
+
+          env: []
+          #  - name: CRON
+          #    value: "0 3 * * *"
+
+          volumeMounts:
+            - name: ssh
+              mountPath: /root/.ssh
+              readOnly: true
+
+            - name: borgmatic-config
+              mountPath: /etc/borgmatic.d/config.yaml
+              subPath: config.yaml
+              readOnly: true
+
+            # - name: source
+            #   mountPath: /mnt/source
+            #   readOnly: true
+
+            # - name: borg-cache
+            #   mountPath: /root/.cache/borg
+
+            # - name: borg-state
+            #   mountPath: /root/.local/state/borgmatic
+
+            - name: borg-passphrase
+              mountPath: /run/secrets/borgmatic
+              readOnly: true
+
+      volumes:
+        - name: ssh
+          secret:
+            secretName: borgmatic-ssh
+            defaultMode: 0400
+            items:
+              - key: id_ed25519_test
+                path: id_ed25519
+                mode: 0400
+              - key: id_ed25519_test.pub
+                path: id_ed25519.pub
+                mode: 0444
+              - key: known_hosts
+                path: known_hosts
+                mode: 0444
+
+        - name: borg-passphrase
+          secret:
+            secretName: borgmatic-passphrase
+            defaultMode: 0400
+            items:
+              - key: passphrase
+                path: passphrase
+                mode: 0400
+
+        - name: borgmatic-config
+          configMap:
+            name: borgmatic-config
+
+        # - name: source
+        #   persistentVolumeClaim:
+        #     claimName: data-to-backup
+
+        # - name: borg-cache
+        #   persistentVolumeClaim:
+        #     claimName: borgmatic-cache
+
+        # - name: borg-state
+        #   persistentVolumeClaim:
+        #     claimName: borgmatic-state

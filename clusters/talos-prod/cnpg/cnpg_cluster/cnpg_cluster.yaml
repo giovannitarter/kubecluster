@@ -1,0 +1,46 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgis-cluster
+  namespace: default
+
+spec:
+  instances: 3
+
+  enableSuperuserAccess: true
+
+  superuserSecret:
+    name: postgis-superuser
+
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.4-minimal-trixie
+
+  bootstrap:
+    initdb:
+      database: sentieri
+      owner: sentieri
+      secret:
+        name: postgis-app-credentials
+
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS postgis;
+
+  postgresql:
+    extensions:
+      - name: postgis
+        image:
+          reference: ghcr.io/cloudnative-pg/postgis-extension:3.6.2-18-trixie
+        ld_library_path:
+          - system
+
+  storage:
+    pvcTemplate:
+      storageClassName: openebs-zfspv
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 3Gi
+
+  monitoring:
+    enablePodMonitor: true
