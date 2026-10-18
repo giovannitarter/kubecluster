@@ -28,3 +28,6 @@ terrafom/talos/config/
 terrafom/talos/output/
 bak
 *.bak
+
+clusters/talos-prod/age_keypair/age.agekey
+*.agekey
