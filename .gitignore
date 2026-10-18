@@ -27,3 +27,4 @@ plan
 terrafom/talos/config/
 terrafom/talos/output/
 bak
+*.bak
